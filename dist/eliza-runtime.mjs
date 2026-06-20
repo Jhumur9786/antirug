@@ -22,16 +22,16 @@ var tokenScannerProvider = {
   get: async (runtime, message, state) => {
     try {
       const text2 = message.content?.text || "";
-      const match = text2.match(/0\.0\.\d+/);
+      const match = text2.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
       if (!match) {
         return "";
       }
       const tokenId = match[0];
-      runtime.logger.info(`[TokenScannerProvider] Intercepted token ID ${tokenId}. Initiating Mirror Node scan...`);
+      runtime.logger.info(`[TokenScannerProvider] Intercepted token ID ${tokenId}. Initiating RPC scan...`);
       const scanner = new TokenScannerAgent();
       const data = await scanner.scan(tokenId);
       return `
-=== HEDERA MIRROR NODE RAW DATA (TOKEN SCANNER) ===
+=== SOLANA RPC RAW DATA (TOKEN SCANNER) ===
 ${JSON.stringify(data, null, 2)}
 ===================================================
 `;
@@ -50,7 +50,7 @@ var sentimentProvider = {
   get: async (runtime, message, state) => {
     try {
       const text2 = message.content?.text?.toLowerCase() || "";
-      const isAnalysis = text2.includes("analyze") || text2.includes("risk") || text2.match(/0\.0\.\d+/);
+      const isAnalysis = text2.includes("analyze") || text2.includes("risk") || text2.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
       if (!isAnalysis) {
         return "";
       }
@@ -63,7 +63,7 @@ var sentimentProvider = {
       await Promise.all([
         sentAgent.fetchCoinGeckoData(tokenSymbol),
         sentAgent.fetchDexData(tokenSymbol),
-        sentAgent.fetchGitHubData("https://github.com/hasgraph/hedera-services")
+        sentAgent.fetchGitHubData("https://github.com/solana-labs/solana")
       ]);
       return `
 === SOCIAL & MARKET INTELLIGENCE ===
@@ -96,9 +96,9 @@ var scanTokenAction = {
   validate: async (runtime, message) => true,
   handler: async (runtime, message, state, options, callback) => {
     const text2 = message.content?.text || "";
-    const match = text2.match(/0\.0\.\d+/);
+    const match = text2.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
     if (!match) {
-      if (callback) callback({ text: "Please specify a valid Hedera token ID to scan." });
+      if (callback) callback({ text: "Please specify a valid Solana token address to scan." });
       return false;
     }
     const tokenId = match[0];
@@ -139,7 +139,7 @@ var sentimentAction = {
   validate: async (runtime, message) => true,
   handler: async (runtime, message, state, options, callback) => {
     const text2 = message.content?.text || "";
-    const match = text2.match(/0\.0\.\d+/);
+    const match = text2.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
     const tokenId = match ? match[0] : null;
     let symbolMatch = "UNKNOWN";
     if (tokenId && ToolDataCache[tokenId]?.scanner?.name) {
@@ -154,7 +154,7 @@ var sentimentAction = {
       await Promise.all([
         sentAgent.fetchCoinGeckoData(symbolMatch),
         sentAgent.fetchDexData(symbolMatch),
-        sentAgent.fetchGitHubData("https://github.com/hasgraph/hedera-services")
+        sentAgent.fetchGitHubData("https://github.com/solana-labs/solana")
       ]);
       const scannerMock = tokenId && ToolDataCache[tokenId]?.scanner ? ToolDataCache[tokenId].scanner : { token_id: tokenId, name: symbolMatch, symbol: symbolMatch };
       const sentimentData = await sentAgent.analyzeSentiment(scannerMock);
@@ -182,269 +182,6 @@ var sentimentAction = {
 
 // ElizaActions/PredictAction.ts
 import path5 from "path";
-
-// openconvai-client.ts
-var OpenConvAIClient = class _OpenConvAIClient {
-  static instance;
-  runtime;
-  hcsClient;
-  inboundTopicId = null;
-  globalSirenTopicId = null;
-  // Micro-monetization: minimum HBAR fee for analysis requests
-  ANALYSIS_FEE_HBAR = 1;
-  // Track processed requests to avoid duplicates
-  processedRequests = /* @__PURE__ */ new Set();
-  constructor(runtime) {
-    this.runtime = runtime;
-    _OpenConvAIClient.instance = this;
-  }
-  async start() {
-    this.runtime.logger.info("\u{1F7E2} Deploying AntiRug onto OpenConvAI (HCS-10)...");
-    if (!process.env.HEDERA_ACCOUNT_ID || !process.env.HEDERA_PRIVATE_KEY) {
-      this.runtime.logger.warn("\u{1F7E1} Missing Hedera ENV keys. Cannot connect to HCS-10 network.");
-      return;
-    }
-    try {
-      const sdk = await import("@hashgraphonline/standards-sdk");
-      const { HCS10Client } = sdk;
-      const { InboundTopicType } = sdk;
-      this.hcsClient = new HCS10Client({
-        network: "testnet",
-        operatorId: process.env.HEDERA_ACCOUNT_ID,
-        operatorPrivateKey: process.env.HEDERA_PRIVATE_KEY
-      });
-      const response = await this.hcsClient.createInboundTopic(
-        process.env.HEDERA_ACCOUNT_ID,
-        InboundTopicType.CONTROLLED,
-        86400
-      );
-      this.inboundTopicId = typeof response === "string" ? response : response.topicId?.toString() || response.toString();
-      this.runtime.logger.info(`====================================================`);
-      this.runtime.logger.info(`\u2705 OPENCONVAI AGENT SUCCESSFULLY REGISTERED!`);
-      this.runtime.logger.info(`\u{1F4E1} My HCS Topic Inbox is: ${this.inboundTopicId}`);
-      const sirenResp = await this.hcsClient.createInboundTopic(
-        process.env.HEDERA_ACCOUNT_ID,
-        InboundTopicType.PUBLIC,
-        86400
-      );
-      this.globalSirenTopicId = typeof sirenResp === "string" ? sirenResp : sirenResp.topicId?.toString() || sirenResp.toString();
-      this.runtime.logger.info(`\u{1F6A8} GLOBAL SECURITY SIREN HCS TOPIC is: ${this.globalSirenTopicId}`);
-      this.runtime.logger.info(`\u{1F4B0} Micro-Monetization ACTIVE: Other agents must pay \u2265${this.ANALYSIS_FEE_HBAR} HBAR for analysis.`);
-      this.runtime.logger.info(`\u{1F916} Other AI Agents can now ping me for Rug Risk analysis!`);
-      this.runtime.logger.info(`====================================================`);
-      this.pollInbox();
-    } catch (error) {
-      this.runtime.logger.error(`\u274C OpenConvAI Init Error: ${error.message}`);
-    }
-  }
-  // ═══════════════════════════════════════════════════
-  //  FEATURE 4: MICRO-MONETIZATION INBOX LISTENER
-  // ═══════════════════════════════════════════════════
-  pollInbox() {
-    setInterval(async () => {
-      if (!this.inboundTopicId || !this.hcsClient) return;
-      try {
-        const messages = await this.fetchInboxMessages();
-        for (const msg of messages) {
-          if (this.processedRequests.has(msg.id)) continue;
-          this.processedRequests.add(msg.id);
-          await this.handleIncomingRequest(msg);
-        }
-      } catch {
-      }
-    }, 3e4);
-  }
-  /**
-   * Fetch messages from the HCS inbox topic via Mirror Node
-   */
-  async fetchInboxMessages() {
-    if (!this.inboundTopicId) return [];
-    try {
-      const response = await fetch(`https://testnet.mirrornode.hedera.com/api/v1/topics/${this.inboundTopicId}/messages?limit=5&order=desc`);
-      if (!response.ok) return [];
-      const data = await response.json();
-      return (data.messages || []).map((m) => {
-        let content = {};
-        try {
-          const decoded = Buffer.from(m.message, "base64").toString("utf-8");
-          content = JSON.parse(decoded);
-        } catch {
-          content = {};
-        }
-        return {
-          id: m.sequence_number?.toString() || `${Date.now()}`,
-          content,
-          sender: m.payer_account_id || "unknown"
-        };
-      });
-    } catch {
-      return [];
-    }
-  }
-  /**
-   * Handle an incoming analysis request from another AI agent.
-   * Verifies HBAR payment before running the pipeline.
-   */
-  async handleIncomingRequest(msg) {
-    const { content, sender } = msg;
-    if (!content.action || content.action !== "REQUEST_ANALYSIS") return;
-    if (!content.token_id) return;
-    const tokenId = content.token_id;
-    const paymentTxId = content.payment_tx_id;
-    const replyTopicId = content.reply_topic_id;
-    this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] Received analysis request from ${sender} for token ${tokenId}`);
-    if (paymentTxId) {
-      const paymentVerified = await this.verifyHBARPayment(paymentTxId);
-      if (!paymentVerified) {
-        this.runtime.logger.warn(`\u{1F4B0} [MONETIZATION] Payment verification FAILED for tx: ${paymentTxId}`);
-        await this.publishReply(replyTopicId, {
-          event: "PAYMENT_FAILED",
-          message: `Payment verification failed. Please send \u2265${this.ANALYSIS_FEE_HBAR} HBAR to ${process.env.HEDERA_ACCOUNT_ID} and include the transaction ID.`,
-          required_fee: `${this.ANALYSIS_FEE_HBAR} HBAR`
-        });
-        return;
-      }
-      this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] \u2705 Payment VERIFIED! Running full pipeline for ${tokenId}...`);
-    } else {
-      this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] No payment included. Sending fee requirement.`);
-      await this.publishReply(replyTopicId, {
-        event: "PAYMENT_REQUIRED",
-        message: `AntiRug requires \u2265${this.ANALYSIS_FEE_HBAR} HBAR for a full security analysis. Send payment to ${process.env.HEDERA_ACCOUNT_ID} and include payment_tx_id in your request.`,
-        required_fee: `${this.ANALYSIS_FEE_HBAR} HBAR`,
-        pay_to: process.env.HEDERA_ACCOUNT_ID
-      });
-      return;
-    }
-    try {
-      const path7 = __require("path");
-      const TokenScanner = __require(path7.resolve(process.cwd(), "./TokenScannerAgent"));
-      const SentimentAgent = __require(path7.resolve(process.cwd(), "./SentimentAnalysisAgent"));
-      const BlockchainRiskAgent = __require(path7.resolve(process.cwd(), "./BlockchainRiskAnalysisAgent"));
-      const RiskScoring = __require(path7.resolve(process.cwd(), "./RiskScoringAgent"));
-      const RugPredictor = __require(path7.resolve(process.cwd(), "./RugPredictorAgent"));
-      const AlertEngine = __require(path7.resolve(process.cwd(), "./AlertAgent"));
-      const scanner = new TokenScanner();
-      const scannerData = await scanner.scan(tokenId);
-      const sentAgent = new SentimentAgent();
-      const sentimentData = await sentAgent.analyzeSentiment(scannerData);
-      const bcRisk = new BlockchainRiskAgent().analyzeTokenRisk(scannerData);
-      const riskScore = await new RiskScoring().calculateRisk({ scanner: scannerData, blockchain: bcRisk, sentiment: sentimentData });
-      const prediction = await new RugPredictor().predictRisk({ scanner: scannerData, blockchain_risk: bcRisk, sentiment: sentimentData, risk_score: riskScore });
-      const report = {
-        event: "ANALYSIS_COMPLETE",
-        protocol: "HCS-10",
-        sender: "AntiRug_AI",
-        token_id: tokenId,
-        token_name: scannerData.name || "Unknown",
-        risk_score: riskScore.rug_risk_score,
-        risk_level: riskScore.risk_level,
-        rug_probability: prediction.rug_probability,
-        prediction_strength: prediction.prediction_strength,
-        admin_control: bcRisk.admin_control_risk,
-        mint_risk: bcRisk.mint_risk_level,
-        ai_summary: riskScore.ai_risk_summary,
-        timestamp: (/* @__PURE__ */ new Date()).toISOString()
-      };
-      await this.publishReply(replyTopicId, report);
-      this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] \u2705 Paid analysis for ${tokenId} delivered to ${replyTopicId}!`);
-    } catch (err) {
-      this.runtime.logger.error(`\u{1F4B0} [MONETIZATION] Pipeline error: ${err.message}`);
-      await this.publishReply(replyTopicId, {
-        event: "ANALYSIS_ERROR",
-        message: `Pipeline failed: ${err.message}`,
-        token_id: tokenId
-      });
-    }
-  }
-  /**
-   * Verify an HBAR payment transaction on the Hedera Mirror Node
-   */
-  async verifyHBARPayment(txId) {
-    try {
-      const response = await fetch(`https://testnet.mirrornode.hedera.com/api/v1/transactions/${txId}`);
-      if (!response.ok) return false;
-      const data = await response.json();
-      const transactions = data.transactions || [];
-      if (transactions.length === 0) return false;
-      const tx = transactions[0];
-      const ourAccount = process.env.HEDERA_ACCOUNT_ID;
-      const transfers = tx.transfers || [];
-      for (const transfer of transfers) {
-        if (transfer.account === ourAccount && transfer.amount > 0) {
-          const hbarAmount = transfer.amount / 1e8;
-          if (hbarAmount >= this.ANALYSIS_FEE_HBAR) {
-            this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] Confirmed ${hbarAmount} HBAR payment from tx ${txId}`);
-            return true;
-          }
-        }
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }
-  /**
-   * Publish a reply to another agent's HCS topic
-   */
-  async publishReply(replyTopicId, payload) {
-    if (!replyTopicId || !this.hcsClient) {
-      this.runtime.logger.info(`[OpenConvAI] Reply payload (no reply topic): ${JSON.stringify(payload).substring(0, 200)}`);
-      return;
-    }
-    try {
-      await this.hcsClient.sendMessage(replyTopicId, JSON.stringify(payload));
-    } catch (error) {
-      this.runtime.logger.error(`[OpenConvAI] Reply publish error: ${error.message}`);
-    }
-  }
-  /**
-   * Autonomously broadcasts a "RUG PULL IMMINENT" alert globally across the HCS network.
-   * Uses direct Hedera SDK TopicMessageSubmitTransaction to bypass standards-sdk profile validation.
-   */
-  async broadcastGlobalAlert(tokenId, probability, criticalIssue) {
-    if (!this.globalSirenTopicId) {
-      this.runtime.logger.warn(`[OpenConvAI] \u26A0\uFE0F No siren topic available. Skipping broadcast.`);
-      return;
-    }
-    const alertPayload = JSON.stringify({
-      event: "EMERGENCY_RUG_WARNING",
-      protocol: "HCS-10",
-      sender: "AntiRug_AI_Global_Siren",
-      target_token: tokenId,
-      rug_probability_percent: probability,
-      critical_issue: criticalIssue,
-      action_required: "IMMEDIATE_LIQUIDITY_WITHDRAWAL",
-      timestamp: (/* @__PURE__ */ new Date()).toISOString()
-    });
-    this.runtime.logger.warn(`[OpenConvAI] \u{1F6A8} BROADCASTING DECENTRALIZED GLOBAL ALERT FOR ${tokenId}!`);
-    try {
-      const { TopicMessageSubmitTransaction, Client, PrivateKey } = await import("@hashgraph/sdk");
-      const client = Client.forTestnet();
-      let privateKey;
-      const pkStr = process.env.HEDERA_PRIVATE_KEY;
-      try {
-        privateKey = PrivateKey.fromStringECDSA(pkStr);
-      } catch {
-        try {
-          privateKey = PrivateKey.fromStringED25519(pkStr);
-        } catch {
-          try {
-            privateKey = PrivateKey.fromStringDer(pkStr);
-          } catch {
-            privateKey = PrivateKey.fromString(pkStr);
-          }
-        }
-      }
-      client.setOperator(process.env.HEDERA_ACCOUNT_ID, privateKey);
-      await new TopicMessageSubmitTransaction().setTopicId(this.globalSirenTopicId).setMessage(alertPayload).execute(client);
-      this.runtime.logger.warn(`[OpenConvAI] \u{1F6A8} ALERT SUCCESSFULLY PUBLISHED TO HCS NETWORK TOPIC ${this.globalSirenTopicId}`);
-    } catch (error) {
-      this.runtime.logger.error(`[OpenConvAI] Broadcast Error: ${error.message}`);
-    }
-  }
-};
-
-// ElizaActions/PredictAction.ts
 var RiskScoringAgent = __require(path5.resolve(process.cwd(), "RiskScoringAgent"));
 var RugPredictorAgent = __require(path5.resolve(process.cwd(), "RugPredictorAgent"));
 var AlertAgent = __require(path5.resolve(process.cwd(), "AlertAgent"));
@@ -488,9 +225,6 @@ var predictRugPullAction = {
       });
       if (prediction.rug_probability > 75) {
         const criticalIssue = cached.blockchain.mint_risk_level === "CRITICAL" ? "Centralized Minting Authority Detected" : alert.security_posture;
-        if (OpenConvAIClient.instance) {
-          await OpenConvAIClient.instance.broadcastGlobalAlert(tokenId, prediction.rug_probability, criticalIssue);
-        }
       }
       const response = `\u{1F6A8} FINAL SECURITY POSTURE: ${cached.scanner.name} \u{1F6A8}
 - Rug Risk Score: ${riskScore.rug_risk_score}/100
@@ -513,7 +247,7 @@ var characterPath = path6.resolve(process.cwd(), "antirug.character.json");
 var characterJson = JSON.parse(fs.readFileSync(characterPath, "utf-8"));
 var AntiRugElizaRuntime = class {
   runtime;
-  openConvAI;
+  // OpenConvAI removed
   // Ultra-lightweight conversational memory map: chatId -> previous messages
   chatMemory = /* @__PURE__ */ new Map();
   // Persistent memory file path
@@ -533,7 +267,7 @@ var AntiRugElizaRuntime = class {
   // Deduplication: track already-scanned and already-alerted tokens to prevent spam
   scannedTokens = /* @__PURE__ */ new Set();
   alertedTokens = /* @__PURE__ */ new Set();
-  // Timestamp cursor for Mirror Node pagination — ensures we always fetch NEW tokens
+  // Timestamp cursor for Solana RPC pagination — ensures we always fetch NEW tokens
   lastTokenTimestamp = null;
   // ═══ LEVEL 4: SELF-LEARNING ═══
   // Scan history — records every scan result for pattern learning
@@ -580,8 +314,6 @@ var AntiRugElizaRuntime = class {
       databaseAdapter: {},
       cacheManager: {}
     });
-    this.openConvAI = new OpenConvAIClient(this.runtime);
-    this.openConvAI.start();
     if (process.env.TELEGRAM_BOT_TOKEN) {
       import("telegraf").then(({ Telegraf }) => {
         const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
@@ -716,7 +448,7 @@ Generate a FRESH, CREATIVE operational plan for this cycle. Output ONLY a JSON a
 1. You MUST NOT repeat tasks from previous plans above. Each cycle must be UNIQUE.
 2. Use different verbs, angles, and strategies each time.
 3. This cycle's suggested focus area is: "${suggestedFocus}" \u2014 incorporate this theme creatively.
-4. Include ONE scanning task: "Scan latest real Hedera tokens" (this is the only repeatable task).
+4. Include ONE scanning task: "Scan latest real Solana tokens" (this is the only repeatable task).
 5. All other tasks must be NOVEL approaches you haven't tried before.
 6. Think like a security researcher \u2014 vary your methodology each cycle.
 7. Consider the time of day: ${timeContext}
@@ -777,12 +509,8 @@ Be bold, creative, and different each time. Surprise yourself.` },
           tokensToScan = [tokenMatch[0]];
         } else {
           try {
-            let mirrorUrl = "https://mainnet-public.mirrornode.hedera.com/api/v1/tokens?order=desc";
+            let mirrorUrl = "https://api.dexscreener.com/token-profiles/latest/v1";
             const scanLimit = this.marketMood.value < 25 ? 15 : this.marketMood.value < 50 ? 10 : 5;
-            mirrorUrl += `&limit=${scanLimit}`;
-            if (this.lastTokenTimestamp) {
-              mirrorUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens?order=asc&limit=${scanLimit}&timestamp=gt:${this.lastTokenTimestamp}`;
-            }
             const mirrorResponse = await fetch(mirrorUrl);
             if (mirrorResponse.ok) {
               const mirrorData = await mirrorResponse.json();
@@ -793,7 +521,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
                 const newestTs = this.lastTokenTimestamp ? allTokens[allTokens.length - 1].created_timestamp : allTokens[0].created_timestamp;
                 if (newestTs) this.lastTokenTimestamp = newestTs;
               }
-              this.runtime.logger.info(`   \u{1F50D} Fetched ${tokensToScan.length} NEW tokens from Hedera Mirror Node (${this.scannedTokens.size} already scanned)`);
+              this.runtime.logger.info(`   \u{1F50D} Fetched ${tokensToScan.length} NEW tokens from Solana (${this.scannedTokens.size} already scanned)`);
             }
           } catch {
             tokensToScan = ["0.0." + Math.floor(1e6 + Math.random() * 9e6)];
@@ -845,13 +573,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
               if (riskScore > alertThreshold && !this.alertedTokens.has(tokenId)) {
                 this.alertedTokens.add(tokenId);
                 this.runtime.logger.warn(`   \u{1F6A8} HIGH RISK DETECTED: ${scannerData.name} (${tokenId})! Broadcasting alert...`);
-                if (this.openConvAI) {
-                  await this.openConvAI.broadcastGlobalAlert(
-                    tokenId,
-                    riskScore > 90 ? 90 : 75,
-                    `Autonomous scan detected highly dangerous token! Score=${riskScore}/100`
-                  );
-                }
+                this.runtime.logger.warn(`Autonomous scan detected highly dangerous token! Score=${riskScore}/100`);
               }
             } else {
               this.runtime.logger.info(`   \u26A0\uFE0F Token ${tokenId} not found or invalid.`);
@@ -1184,7 +906,7 @@ WIRING AND ANTI-LOOP RULES:
           function: {
             name: "generate_content",
             description: "Generate social media content about a token based on scan data. Supports content types: tweet (single punchy post), thread (multi-tweet analysis), alert (security bulletin), post (medium-length analysis), roast (savage humor), summary (clean professional). Use when user asks to write, create, post, tweet, summarize, or roast.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." }, content_type: { type: "string", description: "Type of content: tweet, thread, alert, post, roast, summary" } }, required: ["token_id", "content_type"] }
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Solana token address from the conversation history. Do not hallucinate." }, content_type: { type: "string", description: "Type of content: tweet, thread, alert, post, roast, summary" } }, required: ["token_id", "content_type"] }
           }
         },
         {
@@ -1199,7 +921,7 @@ WIRING AND ANTI-LOOP RULES:
           type: "function",
           function: {
             name: "find_latest_tokens",
-            description: "Find the newest active tokens recently launched on the Hedera network. Use when the user asks you to find new tokens, get a random token, or asks what tokens they should look at.",
+            description: "Find the newest active tokens recently launched on the Solana network. Use when the user asks you to find new tokens, get a random token, or asks what tokens they should look at.",
             parameters: { type: "object", properties: {}, required: [] }
           }
         },
@@ -1239,7 +961,7 @@ WIRING AND ANTI-LOOP RULES:
           const historyText = history.map((h) => h.content).join(" ");
           if (toolCall.function.name !== "find_latest_tokens" && toolCall.function.name !== "get_safe_tokens" && (!tokenId || !historyText.includes(tokenId))) {
             this.runtime.logger.info(`[Intent] AI hallucinated token: ${tokenId}. Extracting from memory.`);
-            const matches = historyText.match(/0\.0\.\d+/g);
+            const matches = historyText.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/g);
             if (matches && matches.length > 0) {
               tokenId = matches[matches.length - 1];
             } else {
@@ -1263,11 +985,11 @@ WIRING AND ANTI-LOOP RULES:
             } else if (toolCall.function.name === "get_token_fundamentals") {
               toolResult = await this.runFundamentalsCheck(sessionId, tokenId, dummyHistory);
             } else if (toolCall.function.name === "find_latest_tokens") {
-              this.runtime.logger.info("[Intent] Fetching newest Hedera tokens directly from Mirror Node...");
-              const res = await fetch("https://mainnet-public.mirrornode.hedera.com/api/v1/tokens?limit=5&order=desc");
-              if (!res.ok) throw new Error("Mirror node failed to fetch list of tokens.");
+              this.runtime.logger.info("[Intent] Fetching newest Solana tokens directly from DexScreener...");
+              const res = await fetch("https://api.dexscreener.com/token-profiles/latest/v1");
+              if (!res.ok) throw new Error("API failed to fetch list of tokens.");
               const tokenData = await res.json();
-              const tokensArr = tokenData.tokens.map((t) => `ID: ${t.token_id} | Name: ${t.name} (${t.symbol})`);
+              const tokensArr = tokenData.slice(0, 5).map((t) => `Address: ${t.tokenAddress} | Name: ${t.description || "Unknown"} `);
               toolResult = JSON.stringify({
                 latest_tokens: tokensArr,
                 instruction: "Present these tokens to the user conversationally and ask if they'd like you to scan one of them for rug risks."
@@ -1339,8 +1061,7 @@ WIRING AND ANTI-LOOP RULES:
       const prediction = await new RugPredictor().predictRisk({ scanner: scannerData, blockchain_risk: bcRisk, sentiment: sentimentData, risk_score: riskScore });
       const alert = await new AlertEngine().generateAlert({ risk_score: riskScore, prediction });
       this.scanCache.set(sessionId, { tokenId, scannerData, sentimentData, bcRisk, riskScore, prediction, alert });
-      if (prediction.rug_probability > 75 && OpenConvAIClient.instance) {
-        await OpenConvAIClient.instance.broadcastGlobalAlert(tokenId, prediction.rug_probability, alert.security_posture);
+      if (prediction.rug_probability > 75) {
       }
       const report = JSON.stringify({
         type: "SECURITY_INTELLIGENCE",
@@ -1465,7 +1186,7 @@ WIRING AND ANTI-LOOP RULES:
         dexRiskLevel: sentimentData?.dex_risk_level || "UNKNOWN",
         transactions24h: scannerData?.transactions_24h || "N/A",
         uniqueHolders: scannerData?.holder_count || "N/A",
-        dataSource: "Hedera Mirror Node, CoinGecko, GeckoTerminal"
+        dataSource: "Solana RPC, CoinGecko, GeckoTerminal"
       }, null, 2);
       history.push({ role: "assistant", content: report });
       return report;
@@ -1583,7 +1304,7 @@ ${dataContext}` }
   async runFundamentalsCheck(sessionId, tokenId, history) {
     try {
       this.runtime.logger.info(`[Pipeline] Fundamentals check for ${tokenId}...`);
-      const mirrorRes = await fetch(`https://mainnet.mirrornode.hedera.com/api/v1/tokens/${tokenId}`);
+      const mirrorRes = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenId}`);
       const mirrorData = mirrorRes.ok ? await mirrorRes.json() : {};
       const tokenName = mirrorData.name || "Unknown";
       const tokenSymbol = mirrorData.symbol || "N/A";
@@ -1612,7 +1333,7 @@ ${dataContext}` }
       const twitter = cgData.links?.twitter_screen_name ? `https://x.com/${cgData.links.twitter_screen_name}` : "N/A";
       const github = cgData.links?.repos_url?.github?.[0] || "N/A";
       const genesisDate = cgData.genesis_date || createdAt;
-      const hashingAlgo = cgData.hashing_algorithm || "Hedera Hashgraph (HCS)";
+      const hashingAlgo = cgData.hashing_algorithm || "Solana SPL";
       let aiClassification = "";
       if (categories === "Not categorized on CoinGecko") {
         try {

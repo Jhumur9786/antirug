@@ -13,7 +13,12 @@ function getClient() {
     if (!apiKey) {
       return null;
     }
-    openai = new OpenAI({ apiKey });
+    const baseURL = process.env.OPENAI_BASE_URL;
+    const config = { apiKey };
+    if (baseURL) {
+      config.baseURL = baseURL;
+    }
+    openai = new OpenAI(config);
   }
   return openai;
 }
