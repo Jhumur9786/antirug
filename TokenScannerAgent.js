@@ -2,7 +2,7 @@ const { exec } = require("child_process");
 const path = require("path");
 
 /**
- * Node.js wrapper for the Hedera Token Scanner Agent (Python).
+ * Node.js wrapper for the Solana Token Scanner Agent (Python).
  * Executes the python script and returns the parsed JSON result.
  */
 class TokenScannerAgent {
@@ -13,8 +13,8 @@ class TokenScannerAgent {
 
     async scan(tokenId) {
         return new Promise((resolve, reject) => {
-            if (!tokenId || !tokenId.match(/0\.0\.\d+/)) {
-                return reject(new Error("Invalid Hedera token ID"));
+            if (!tokenId) {
+                return reject(new Error("Invalid token ID"));
             }
 
             const command = `${this.pythonCmd} ${this.scriptPath} ${tokenId}`;
@@ -39,7 +39,7 @@ class TokenScannerAgent {
                     const data = JSON.parse(jsonStr);
 
                     if (data.error) {
-                        return reject(new Error(`Hedera Mirror Node Error: ${data.error}`));
+                        return reject(new Error(`Solana RPC Error: ${data.error}`));
                     }
                     
                     resolve(data);

@@ -1,37 +1,49 @@
-export default function Header({ lastScan }) {
+export default function Header({ lastScan, activeTab, setActiveTab }) {
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 glass border-b border-card-border bg-[#0A0A0A]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Logo */}
+    <nav className="fixed top-0 w-full z-50 border-b-4 border-black dark:border-black bg-surface shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+      <div className="flex justify-between items-center h-20 px-8 w-full max-w-[1280px] mx-auto">
+        {/* Brand */}
         <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center mr-3 shadow-md overflow-hidden border border-[#333]">
-              <img src="/logo.png" alt="RugGuard AI" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-lg">🛡️</span>'; }} />
-            </div>
-          <span className="text-xl font-bold text-white tracking-tight">
-            RugGuard <span className="text-slate-500 font-medium">AI</span>
+          <span className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg font-extrabold text-primary-container italic tracking-tight drop-shadow-[2px_2px_0_rgba(0,0,0,1)]">
+            AntiRug AI
           </span>
         </div>
 
-        {/* Subtitle */}
-        <p className="hidden md:block text-sm text-slate-500 tracking-wide font-medium">
-          Autonomous Web3 Intelligence
-        </p>
+        {/* Navigation Links */}
+        <div className="hidden md:flex items-center gap-8 h-full pt-2">
+          <button 
+            onClick={() => setActiveTab('scanner')}
+            className={`font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg hover:scale-105 transition-all duration-200 ${
+              activeTab === 'scanner' 
+                ? "text-primary-container border-b-4 border-primary-container relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-1 after:bg-primary-container drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]" 
+                : "text-on-surface-variant opacity-70 hover:opacity-100"
+            }`}
+          >
+            Scanner
+          </button>
+          <button 
+            onClick={() => setActiveTab('agent')}
+            className={`font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg hover:scale-105 transition-all duration-200 ${
+              activeTab === 'agent' 
+                ? "text-primary-container border-b-4 border-primary-container relative after:content-[''] after:absolute after:-bottom-1 after:left-0 after:w-full after:h-1 after:bg-primary-container drop-shadow-[0_0_8px_rgba(0,255,136,0.5)]" 
+                : "text-on-surface-variant opacity-70 hover:opacity-100"
+            }`}
+          >
+            Agent
+          </button>
+        </div>
 
-        {/* Status */}
-        <div className="flex items-center gap-2">
-          {lastScan && (
-            <span className="hidden sm:inline text-xs text-slate-500 font-medium mr-1">
-              {lastScan !== "Agent Active" ? lastScan : ""}
-            </span>
-          )}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#111111] border border-[#333333]">
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-            <span className="text-xs font-semibold text-slate-200">
-              {lastScan === "Agent Active" ? "Agent Active" : "Online"}
-            </span>
+        {/* Trailing Actions */}
+        <div className="flex items-center gap-4">
+          <div className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary-container text-on-primary-container border-2 border-black rounded-full font-title-md text-title-md shadow-[2px_2px_0px_0px_rgba(0,0,0,1),0_0_10px_rgba(0,255,136,0.3)]">
+            <span className="w-3 h-3 rounded-full bg-black animate-pulse shadow-[0_0_5px_rgba(0,0,0,0.5)]"></span>
+            Agent Active
           </div>
+          <button className="w-12 h-12 bg-surface-variant rounded-full border-2 border-black flex items-center justify-center hover:scale-105 transition-transform duration-200 active:translate-y-1 active:shadow-none shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-primary-container">
+            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>account_circle</span>
+          </button>
         </div>
       </div>
-    </header>
+    </nav>
   )
 }

@@ -9,7 +9,7 @@ export default function Recommendations({ data }) {
   if (!recommendations.length && !aiScenario && !securityPosture) return null
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="bg-surface-container border-4 border-black rounded-xl p-6 cel-shadow">
       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-2">
         <span>📋</span> Security Assessment & Recommendations
       </h3>

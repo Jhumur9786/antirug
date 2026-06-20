@@ -1,7 +1,7 @@
 /**
  * AlertAgent Full Pipeline Integration Test
  * 
- * Runs the complete RugGuard pipeline end-to-end:
+ * Runs the complete AntiRug pipeline end-to-end:
  *   TokenScannerAgent (Python) →
  *   BlockchainRiskAnalysisAgent →
  *   SentimentAnalysisAgent →
@@ -119,7 +119,7 @@ async function runAlertAgentPipelineTest() {
         const g9 = check("security_posture exists", !!alert.security_posture);
         const g10 = check("alert_score is numeric", typeof alert.alert_score === "number" && !isNaN(alert.alert_score));
         const g11 = check("ai_confidence passed correctly", alert.ai_confidence === prediction.ai_confidence);
-        const g12 = check("agent identifier present", alert.agent === "RugGuard AlertAgent v1");
+        const g12 = check("agent identifier present", alert.agent === "AntiRug AlertAgent v1");
         results.alert_generation = g1 && g2 && g3 && g4 && g5 && g6 && g7 && g8 && g9 && g10 && g11 && g12;
 
         // ═══════════════════════════════════════════════════════════

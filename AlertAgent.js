@@ -1,6 +1,6 @@
 const OpenAI = require("openai");
 
-// AlertAgent for RugGuard Multi-Agent Security Pipeline
+// AlertAgent for AntiRug Multi-Agent Security Pipeline
 // converts AI risk predictions into security alerts and recommendations.
 class AlertAgent {
     constructor() {
@@ -90,15 +90,21 @@ Do NOT hallucinate. Do not use markdown inside values. Return only the JSON obje
 
                     // typical model as per repo usage
                     const response = await this._withTimeout(this.openai.chat.completions.create({
-                        model: "gpt-4o-mini",
+                        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
                         messages: [{ role: "user", content: prompt }],
                         temperature: 0.2,
-                        max_tokens: 200
+                        max_tokens: 800,
+                        response_format: { type: "json_object" }
                     }), 15000);
 
                     let content = response.choices[0].message.content || "{}";
                     // Strip markdown
                     content = content.replace(/```json/g, "").replace(/```/g, "").trim();
+                    const start = content.indexOf('{');
+                    const end = content.lastIndexOf('}');
+                    if (start !== -1 && end !== -1) {
+                        content = content.substring(start, end + 1);
+                    }
                     
                     // Parse safely
                     const parsed = JSON.parse(content);

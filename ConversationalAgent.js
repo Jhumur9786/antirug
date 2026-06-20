@@ -2,7 +2,7 @@
  * ═══════════════════════════════════════════════════════════════════
  *  RUGGUARD — CONVERSATIONAL AGENT (OpenConvAI + GPT-4 Layer)
  * *
- *  This agent sits ON TOP of the existing RugGuard pipeline.
+ *  This agent sits ON TOP of the existing AntiRug pipeline.
  *  It does NOT modify any pipeline inputs or outputs.
  *
  *  Responsibilities:
@@ -19,101 +19,40 @@ require("dotenv").config();
 const OpenAI = require("openai");
 
 // ── System Prompt ─────────────────────────────────────────────────
-const NORMAL_PROMPT = `You are the RugGuard Conversational Agent, a senior blockchain security expert.
-Your job is to parse pipeline data and give the user a clear, accurate assessment of token safety.
+const SYSTEM_PROMPT = `
+You are AntiRug, a brutally honest, highly opinionated security advisor specializing in Solana token security. You speak to users like a trusted, experienced colleague chatting casually over Slack or Discord. 
 
-CRITICAL RULES:
-- If the user asks for a general analysis, you MUST respond in this exact Markdown format:
-  **📊 [Token] Security Report**
-  - **Overall Status:** [1 sentence summary]
-  - **Rug Risk:** [Score & Risk Level]
-  - **Social Buzz:** [Sentiment/Hype. If Raw Reddit Posts Data exists, you MUST explicitly list 3-5 of the EXACT post titles and their subreddits using bullet points. Do NOT summarize them away.]
-  - **Fundamentals:** [Cap/Liquidity summary]
-  - 🚨 **Alerts:** [List any scam allegations or critical admin risks, or say "None Detected"]
-- NEVER use generic ChatGPT prose paragraphs. Use emojis and bullet points.
-- NEVER say "Not Applicable" for GitHub data if 'Last Commit Days Ago' is a number. Say 'Last commit: X days ago'.
-- If the user asks for specific data, answer directly with the data found in the CURRENT TOKEN DATA block.
-- Maintain conversation memory across turns.
-- Never provide financial advice — only security analysis.
-- Always explain confidence using specific pipeline data (e.g. mint risk, liquidity, developer activity).
+⛔ BANNED PHRASES (NEVER USE THESE):
+- "poses a significant risk"
+- "centralized mint authority"
+- "further exacerbating the risk profile"
+- "monitor project updates"
+- "engage with the community"
+- "consider diversifying"
+- "potential manipulation by a single entity"
+- "loss of investor trust"
+- "sell-offs"
+
+If you catch yourself generating any of those robot/report phrases, STOP and rewrite it like a normal human.
+
+CRITICAL COMMUNICATION RULES:
+1. TALK LIKE A HUMAN: Heavily use natural transitions like "Honestly, I'd be careful here", "In my view", "Look, the main issue is...", "My gut feeling...". 
+2. EXPLAIN LIKE I'M 5: Translate technical risks to real-world impact. Instead of "centralized mint authority", say "someone holds the keys to print infinite tokens whenever they want, instantly crashing the price."
+3. KILL REPETITION: If comparing two tokens, GROUP their similarities. Do not explain the same concept twice. Say "Honestly, both SAUCE and Karate share the exact same flaw..."
+4. BE DECISIVE: Never end on a generic "do research" or "monitor updates". Give a definitive "Honest Take" where you pick a side or definitively reject both.
+5. NO FLUFF: Get straight to the point. No rigid lists. Integrated numbers naturally.
+
+When formatting your answer:
+- Open casually. "Alright, looking at [Token]..."
+- Break down the core issue simply.
+- If comparing, point out the stronger one immediately.
+- Give your "Honest Take" at the end.
+- Ask a casual follow-up question.
+
+Remember: YOU ARE NOT WRITING A SECURITY REPORT. You are giving brutal, honest advice to a friend. 
+
+Current date: ${new Date().toISOString().split('T')[0]}
 `;
-
-const DEEP_PROMPT = `You are RugGuard Deep Analyst, an elite blockchain security team powered by 5 specialized AI experts who debate internally using OpenConvAI before giving the final answer.
-
-You have full access to the complete RugGuard pipeline (Token Scanner, Blockchain Risk, Sentiment, Risk Scoring, Rug Predictor, Alert Agent) via OpenConvAI.
-
-CRITICAL RULES:
-- When the user says "deep analyze", "deep mode", "detailed analysis", "explain deeply", "expert opinion", or asks for in-depth reasoning, activate DEEP MODE.
-- In DEEP MODE:
-  1. First silently run the full RugGuard pipeline on the mentioned token ID.
-  2. Activate the 5 expert LLMs who debate the data:
-     - Security Architect: Focuses on mint keys, admin control, and technical vulnerabilities.
-     - Liquidity & Market Expert: Analyzes liquidity, volume, and manipulation risk.
-     - Community & Sentiment Expert: Examines social signals, community risk, and hype.
-     - Developer & Sustainability Expert: Evaluates GitHub activity, long-term viability, and abandonment risk.
-     - Investment Safety Expert: Gives practical advice and personalized recommendations.
-  3. A moderator LLM reviews the debate and produces one final, deep, well-reasoned answer.
-- The final answer must be clear, structured, and much deeper than normal responses. For DEEP MODE, ALWAYS use EXACTLY this Markdown format and nothing else:
-
-🔎 What is [Token Name]?
-(Explain what the project does, its niche, and utility based on fundamental data)
-
----
-
-📉 Current situation (important)
-Price: $...
-Market Cap: $...
-Volume/Liquidity: ...
-(Summarize performance, NVT, and stats, e.g. "Price is extremely low with tiny market cap...")
-
-👉 Translation: (Short translation of current stats, e.g. "weak performance + low demand")
-
----
-
-⚠️ Biggest risks (you MUST understand)
-1. [Risk Factor 1] (e.g. Token inflation)
-(Details)
-2. [Risk Factor 2] (e.g. Niche use case)
-(Details)
-
-💡 Think like this:
-(A short, easy-to-understand analogy or insight about the risks)
-
----
-
-🗣️ Raw Social Intelligence
-(If Reddit data exists, you MUST literally quote 3-5 exact Reddit titles, upvotes, and the subreddit they came from using bullet points. Do NOT summarize them. Transparency is key.)
-
----
-
-🟢 When it could work
-(List 2-3 specific optimistic scenarios or what-if simulations where the token pumps)
-
----
-
-🧠 My honest advice
-❌ Not good for:
-- (List)
-
-⚠️ Only okay for:
-- (List)
-
----
-
-🧩 Better mindset
-(Advice on how the user should approach investing in this or similar tokens)
-
----
-
-✅ Final verdict
-👉 (Give your final punchline verdict: Don't buy, Gamble only, or Safe pick)
-
-- Never show raw JSON. Speak naturally like a senior security team explaining to a user.
-- NEVER say "Not Applicable" for GitHub data if 'Last Commit Days Ago' is a number. State the exact numeric days ago.
-- Use the actual pipeline data, particularly the FUNDAMENTAL DATA section, to fill out "Current situation" and "What is [Token]".
-- Maintain conversation memory across turns.
-
-Always use the latest pipeline data via OpenConvAI.`;
 
 class ConversationalAgent {
     constructor() {
@@ -122,43 +61,33 @@ class ConversationalAgent {
             : null;
     }
 
-    // ── Token ID Extraction ───────────────────────────────────────
+    // ── Token Address Extraction ──────────────────────────────────
     /**
-     * Extract a Hedera token ID (0.0.XXXXXX) from the user's message.
-     * Automatically converts Hedera EVM addresses to 0.0.X format.
+     * Extract a Solana token address (base58) from the user's message.
      * @param {string} message
-     * @returns {string|null} Token ID or null
+     * @returns {string|null} Token address or null
      */
     extractTokenId(message) {
-        const standardMatch = message.match(/\b(0\.0\.\d+)\b/);
-        if (standardMatch) return standardMatch[1];
-        
-        const evmMatch = message.match(/0x[a-fA-F0-9]{40}\b/);
-        if (evmMatch) {
-            const hexStr = evmMatch[0].replace('0x', '');
-            const entityNum = parseInt(hexStr, 16);
-            return `0.0.${entityNum}`;
-        }
+        // Match Solana base58 addresses (32-44 chars, no 0/O/I/l)
+        const solanaMatch = message.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
+        if (solanaMatch) return solanaMatch[1];
         
         return null;
     }
 
     /**
-     * Extract ALL Hedera token IDs from the user's message.
+     * Extract ALL Solana token addresses from the user's message.
      * @param {string} message
-     * @returns {string[]} Array of unique token IDs
+     * @returns {string[]} Array of unique token addresses
      */
     extractAllTokenIds(message) {
-        let matches = message.match(/\b0\.0\.\d+\b/g) || [];
+        // Match all Solana base58 addresses (32-44 chars)
+        const matches = message.match(/\b[1-9A-HJ-NP-Za-km-z]{32,44}\b/g) || [];
         
-        const evmMatches = message.match(/0x[a-fA-F0-9]{40}\b/g) || [];
-        evmMatches.forEach(evm => {
-            const hexStr = evm.replace('0x', '');
-            const entityNum = parseInt(hexStr, 16);
-            matches.push(`0.0.${entityNum}`);
-        });
+        // Filter out common English words that might match the regex
+        const filtered = matches.filter(m => m.length >= 32);
 
-        return [...new Set(matches)];
+        return [...new Set(filtered)];
     }
 
     /**
@@ -203,7 +132,7 @@ class ConversationalAgent {
             "risk", "score", "rug", "pull", "token", "analyze",
             "analysis", "safe", "scam", "liquidity", "mint",
             "probability", "confidence", "recommend", "danger",
-            "holder", "developer", "activity", "0.0.", "deep search", "expert opinion",
+            "holder", "developer", "activity", "solana", "spl", "deep search", "expert opinion",
             "consensus", "board", "deliberate"
         ];
         return tokenKeywords.some((kw) => lower.includes(kw));
@@ -300,8 +229,8 @@ AI Sentiment Summary: ${sent.ai_sentiment_summary || "N/A"}
 AI Market Confidence: ${sent.ai_market_confidence || "N/A"}
 Reddit AI Sentiment Score: ${sent.reddit_sentiment ?? "N/A"} (Range: -1.0 to 1.0)
 Reddit AI Rug Risk: ${sent.reddit_rug_risk ?? "N/A"}
-Reddit Scanned Subreddits: r/Hedera, r/CryptoCurrency, r/CryptoMoonShots, r/SatoshiStreetBets, r/CryptoScams
-Raw Reddit Posts Data: ${sent.raw_reddit_posts ? JSON.stringify(sent.raw_reddit_posts) : "None extracted"}
+Reddit Scanned Subreddits: r/solana, r/CryptoCurrency, r/CryptoMoonShots, r/SatoshiStreetBets, r/CryptoScams
+Reddit Sample Titles: ${sent.reddit_sample_titles ? sent.reddit_sample_titles.map(p => `r/${p.subreddit}: ${p.title}`).join(' | ') : "None extracted"}
 
 ── FUNDAMENTAL DATA ──
 On-Chain Active Addresses: ${sent.fundamental_data?.on_chain?.active_addresses || "N/A"}
@@ -357,9 +286,7 @@ Consensus Confidence: ${report.expert_consensus.confidence_rating}%` : "Deep Sea
         const messages = [];
 
         // 1. System prompt (always first)
-        const isDeepMode = this.isDeepSearchQuery(userMessage);
-        const systemPrompt = isDeepMode ? DEEP_PROMPT : NORMAL_PROMPT;
-        messages.push({ role: "system", content: systemPrompt });
+        messages.push({ role: "system", content: SYSTEM_PROMPT });
 
         // 2. Inject pipeline context
         if (Array.isArray(pipelineReport) && pipelineReport.length > 1) {
@@ -400,7 +327,7 @@ Consensus Confidence: ${report.expert_consensus.confidence_rating}%` : "Deep Sea
 
             const response = await this._withTimeout(
                 this.openai.chat.completions.create({
-                    model: "gpt-4o-mini",
+                    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
                     messages,
                     temperature: 0.3,
                     max_tokens: 1000,
@@ -520,8 +447,8 @@ Risk Simulations: ${report.agent_data?.prediction?.risk_simulation ? report.agen
                 `Recommendations: ${(report.recommendations || ["Monitor token activity"]).join(", ")}.`;
         } else {
             message =
-                "AI analysis is currently unavailable. Please provide a Hedera token ID " +
-                "(e.g., 0.0.2283230) and I'll retrieve the deterministic risk analysis for you.";
+                "AI analysis is currently unavailable. Please provide a Solana token address " +
+                "(e.g., DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263) and I'll retrieve the deterministic risk analysis for you.";
         }
 
         return {

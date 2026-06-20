@@ -1,0 +1,8 @@
+{
+  "wallets": [
+    { "address": "placeholder_wallet_1", "label": "Known Alpha Trader 1", "confidence": 0.9 },
+    { "address": "placeholder_wallet_2", "label": "Known Alpha Trader 2", "confidence": 0.8 }
+  ],
+  "last_updated": "2025-01-01",
+  "note": "Replace with real smart money wallet addresses from Birdeye/GMGN leaderboards"
+}

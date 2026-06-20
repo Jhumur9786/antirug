@@ -8,7 +8,7 @@ export const sentimentProvider: Provider = {
         try {
             // Check if conversation implies token analysis intent
             const text = message.content?.text?.toLowerCase() || "";
-            const isAnalysis = text.includes("analyze") || text.includes("risk") || text.match(/0\.0\.\d+/);
+            const isAnalysis = text.includes("analyze") || text.includes("risk") || text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
             
             if (!isAnalysis) {
                 return "";
@@ -34,7 +34,7 @@ export const sentimentProvider: Provider = {
             await Promise.all([
                 sentAgent.fetchCoinGeckoData(tokenSymbol),
                 sentAgent.fetchDexData(tokenSymbol),
-                sentAgent.fetchGitHubData("https://github.com/hasgraph/hedera-services")
+                sentAgent.fetchGitHubData("https://github.com/solana-labs/solana")
             ]);
             
             // Return raw state strings to inject into the Eliza agent's working memory

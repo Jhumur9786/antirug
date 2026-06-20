@@ -1,66 +1,184 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #FFFFFF;
-  --color-primary-dark: #E5E5E5;
-  --color-primary-light: #A3A3A3;
-  --color-neon-cyan: #FFFFFF;
-  --color-surface: #000000;
-  --color-surface-light: #111111;
-  --color-surface-lighter: #222222;
-  --color-card: #0A0A0A;
-  --color-card-border: #333333;
+  --color-on-secondary-fixed: #390c00;
+  --color-on-primary-container: #007139;
+  --color-on-primary: #003919;
+  --color-on-tertiary: #680019;
+  --color-surface-container: #1c1f30;
+  --color-primary-fixed: #60ff99;
+  --color-tertiary-fixed: #ffdada;
+  --color-secondary: #ffb59d;
+  --color-primary-fixed-dim: #00e479;
+  --color-on-secondary: #5d1900;
+  --color-on-background: #dfe1f9;
+  --color-outline: #849585;
+  --color-on-error-container: #ffdad6;
+  --color-on-surface: #dfe1f9;
+  --color-tertiary: #fffaf9;
+  --color-on-tertiary-container: #c50038;
+  --color-tertiary-container: #ffd4d5;
+  --color-primary-container: #00ff88;
+  --color-tertiary-fixed-dim: #ffb3b5;
+  --color-surface-container-high: #26293b;
+  --color-secondary-container: #b83900;
+  --color-surface-variant: #313446;
+  --color-on-tertiary-fixed: #40000c;
+  --color-surface-container-highest: #313446;
+  --color-on-surface-variant: #b9cbb9;
+  --color-on-tertiary-fixed-variant: #920027;
+  --color-surface-container-low: #181b2b;
+  --color-surface-container-lowest: #0a0d1d;
+  --color-secondary-fixed: #ffdbd0;
+  --color-surface: #0f1223;
+  --color-on-secondary-container: #ffddd2;
+  --color-outline-variant: #3b4b3d;
+  --color-on-error: #690005;
+  --color-on-secondary-fixed-variant: #832600;
+  --color-on-primary-fixed-variant: #005228;
+  --color-background: #0f1223;
+  --color-inverse-primary: #006d37;
+  --color-surface-tint: #00e479;
+  --color-surface-dim: #0f1223;
+  --color-error: #ffb4ab;
+  --color-error-container: #93000a;
+  --color-inverse-surface: #dfe1f9;
+  --color-on-primary-fixed: #00210c;
+  --color-primary: #f1ffef;
+  --color-surface-bright: #35384a;
+  --color-inverse-on-surface: #2c2f41;
+  --color-secondary-fixed-dim: #ffb59d;
+
+  --font-headline-lg-mobile: "Bricolage Grotesque", sans-serif;
+  --font-body-md: "Space Grotesk", sans-serif;
+  --font-display-lg: "Bricolage Grotesque", sans-serif;
+  --font-body-lg: "Space Grotesk", sans-serif;
+  --font-code-sm: "JetBrains Mono", monospace;
+  --font-headline-lg: "Bricolage Grotesque", sans-serif;
+  --font-title-md: "Space Grotesk", sans-serif;
+
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 1.2;
+  --text-headline-lg-mobile--font-weight: 800;
+  
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.6;
+  --text-body-md--font-weight: 400;
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 800;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 1.6;
+  --text-body-lg--font-weight: 400;
+
+  --text-code-sm: 14px;
+  --text-code-sm--line-height: 1.4;
+  --text-code-sm--letter-spacing: -0.01em;
+  --text-code-sm--font-weight: 500;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 1.2;
+  --text-headline-lg--font-weight: 800;
+
+  --text-title-md: 20px;
+  --text-title-md--line-height: 1.4;
+  --text-title-md--font-weight: 700;
+
+  --spacing-container-max: 1280px;
+  --spacing-unit: 4px;
+  --spacing-margin: 32px;
+  --spacing-gutter: 24px;
+
+  --animate-scan-pan: scan-pan 2s ease-in-out infinite alternate;
+  --animate-radar-pulse: radar-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  --animate-pop-in: pop-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+  --animate-progress-fill: progress-fill 5s linear forwards;
+  --animate-sweat-drop: sweat-drop 1s ease-in infinite;
+  --animate-wiggle: wiggle 2s ease-in-out infinite;
+  --animate-needle-bounce: needleBounce 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-slide-up-stagger: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes scan-pan {
+  0% { transform: translateX(-20px); }
+  100% { transform: translateX(20px); }
+}
+@keyframes radar-pulse {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+@keyframes pop-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes progress-fill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+@keyframes sweat-drop {
+  0% { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(20px) scale(0); opacity: 0; }
 }
 
 body {
-  background: #000000;
-  color: #FFFFFF;
+  background: var(--color-background);
+  color: var(--color-on-background);
   min-height: 100vh;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body-md);
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.4)); }
-  50% { opacity: 0.6; filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.6)); }
+/* Faint cartoon circuit board pattern fallback */
+.bg-circuit-pattern {
+    background-image: radial-gradient(circle at 2px 2px, rgba(223, 225, 249, 0.05) 1px, transparent 0);
+    background-size: 32px 32px;
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Typing indicator animation */
+@keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-6px); }
+}
+.typing-dot {
+    animation: bounce 1.4s infinite ease-in-out both;
+}
+.typing-dot:nth-child(1) { animation-delay: -0.32s; }
+.typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+/* Custom Scrollbar for Chat */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #313446;
+    border-radius: 4px;
+    border: 1px solid #000;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #00ff88;
 }
 
-.animate-pulse-glow { animation: pulse-glow 3s ease-in-out infinite; }
-
-.shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+/* Comic Panel Glows */
+.comic-glow-error {
+    box-shadow: 0 0 20px rgba(255, 180, 171, 0.15), 6px 6px 0px 0px rgba(0,0,0,1);
+}
+.cel-shadow {
+    box-shadow: 4px 4px 0px 0px rgba(0,0,0,1), inset 0 2px 0 0 rgba(255,255,255,0.1);
 }
 
-.glass {
-  background: var(--color-card);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid var(--color-card-border);
+/* Mascot Background Animation */
+@keyframes slow-pan {
+    0% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+    50% { transform: translate(-50%, -48%) scale(1.05) rotate(0deg); }
+    100% { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
 }
-
-.risk-circle {
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.2));
-}
-
-/* Custom Chat Scrollbar */
-.chat-scrollbar::-webkit-scrollbar {
-  width: 6px;
-}
-.chat-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.chat-scrollbar::-webkit-scrollbar-thumb {
-  background: #333333;
-  border-radius: 10px;
-}
-.chat-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #555555;
+.bg-mascot {
+    animation: slow-pan 30s ease-in-out infinite;
 }
 
 /* Markdown Styles inside Chat */
@@ -72,8 +190,8 @@ body {
   margin-bottom: 0;
 }
 .markdown-body strong {
-  font-weight: 600;
-  color: #fff;
+  font-weight: 700;
+  color: var(--color-on-surface);
 }
 .markdown-body ul {
   list-style-type: disc;
@@ -81,10 +199,182 @@ body {
   margin-bottom: 0.75rem;
 }
 .markdown-body code {
-  background: #111111;
+  background: var(--color-surface-container-high);
   padding: 0.125rem 0.375rem;
-  border: 1px solid #333333;
+  border: 1px solid var(--color-outline);
   border-radius: 0.25rem;
   font-size: 0.875em;
-  font-family: monospace;
+  font-family: var(--font-code-sm);
+  color: var(--color-primary-container);
 }
+.markdown-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.75rem;
+  font-size: 0.9em;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid var(--color-outline-variant);
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+}
+.markdown-body th {
+  background: var(--color-surface-container-high);
+  font-weight: 700;
+}
+.markdown-body h2, .markdown-body h3 {
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-headline-lg);
+  font-weight: 800;
+  color: var(--color-on-surface);
+}
+
+/* Wiggle animation for status pills — from mockup script */
+@keyframes wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* ========================================
+   SCANNING ANIMATION STYLES (from folder 5)
+   ======================================== */
+
+/* Comic speech bubbles with tails */
+.comic-bubble {
+  position: relative;
+  background: #1A1D2E;
+  border: 3px solid #000;
+  border-radius: 12px;
+  padding: 12px 24px;
+  color: #00ff88;
+  box-shadow: 4px 4px 0px 0px rgba(0,0,0,1);
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.comic-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -15px;
+  left: 50%;
+  margin-left: -10px;
+  border-width: 15px 15px 0;
+  border-style: solid;
+  border-color: #000 transparent transparent transparent;
+}
+.comic-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  margin-left: -7px;
+  border-width: 11px 11px 0;
+  border-style: solid;
+  border-color: #1A1D2E transparent transparent transparent;
+  z-index: 1;
+}
+.comic-bubble.bubble-right::after { left: auto; right: 20px; transform: skewX(-20deg); }
+.comic-bubble.bubble-right::before { left: auto; right: 23px; transform: skewX(-20deg); }
+.comic-bubble.bubble-left::after { left: 20px; transform: skewX(20deg); }
+.comic-bubble.bubble-left::before { left: 23px; transform: skewX(20deg); }
+
+/* Scan line effect */
+.scan-line {
+  background: linear-gradient(to bottom, rgba(0,255,136,0) 0%, rgba(0,255,136,0.5) 50%, rgba(0,255,136,0) 100%);
+  height: 10px;
+  width: 100%;
+  position: absolute;
+  animation: scan-vertical 2s linear infinite;
+}
+@keyframes scan-vertical {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+
+/* ========================================
+   RESULTS DASHBOARD STYLES (from folder 1)
+   ======================================== */
+
+/* Speedometer Gauge */
+.gauge-container {
+  position: relative;
+  width: 240px;
+  height: 120px;
+  overflow: hidden;
+  border-bottom: 4px solid #000;
+}
+.gauge-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  border: 24px solid #313446;
+  border-top-color: #ff3366;
+  border-right-color: #ffb59d;
+  border-bottom-color: transparent;
+  border-left-color: #00ff88;
+  transform: rotate(-45deg);
+}
+.gauge-needle-container {
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  background-color: #000;
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+}
+.gauge-needle {
+  position: absolute;
+  bottom: 10px;
+  left: 50%;
+  width: 6px;
+  height: 110px;
+  background-color: #000;
+  transform-origin: bottom center;
+  border-radius: 4px 4px 0 0;
+  transform: rotate(-90deg);
+}
+
+/* Comic border for cards */
+.comic-border {
+  border: 3px solid #000;
+  box-shadow: 6px 6px 0px 0px rgba(0,0,0,1);
+}
+
+/* Status pills */
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  border: 2px solid #000;
+  font-weight: 800;
+  text-transform: uppercase;
+  font-size: 14px;
+  box-shadow: 2px 2px 0px 0px rgba(0,0,0,1);
+}
+
+/* Needle bounce animation */
+@keyframes needleBounce {
+  0% { transform: rotate(-90deg); }
+  70% { transform: rotate(50deg); }
+  85% { transform: rotate(35deg); }
+  100% { transform: rotate(var(--needle-angle, 45deg)); }
+}
+
+/* Slide up with stagger for cards */
+@keyframes slideUp {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+

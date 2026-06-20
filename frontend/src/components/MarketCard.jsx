@@ -15,7 +15,9 @@ export default function MarketCard({ data }) {
     if (!num || isNaN(num) || num === 0) return '$0'
     if (num >= 1_000_000) return `$${(num / 1_000_000).toFixed(2)}M`
     if (num >= 1_000) return `$${(num / 1_000).toFixed(1)}K`
-    return `$${num.toFixed(2)}`
+    if (num >= 1) return `$${num.toFixed(2)}`
+    if (num >= 0.01) return `$${num.toFixed(4)}`
+    return `$${num.toFixed(6)}`
   }
 
   const getDexRiskStyle = (risk) => {
@@ -23,7 +25,7 @@ export default function MarketCard({ data }) {
   }
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="bg-surface-container border-4 border-black rounded-xl p-6 cel-shadow">
       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-5 flex items-center gap-2">
         <span>📊</span> Liquidity & Market
       </h3>

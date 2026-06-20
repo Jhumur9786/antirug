@@ -13,11 +13,13 @@ class BlockchainRiskAnalysisAgent {
         this.name = "BlockchainRiskAnalysisAgent";
         this.description = "Agent responsible for analyzing structured token data to detect rug-pull risks.";
 
-        // Defined risk scores mapping
+        // Defined risk scores mapping (granular to avoid gaps between 10-80)
         this.SCORES = {
             VERY_HIGH: 95,
             HIGH: 80,
+            MEDIUM_HIGH: 65,
             MEDIUM: 50,
+            MEDIUM_LOW: 35,
             LOW: 20,
             VERY_LOW: 10
         };
@@ -130,6 +132,18 @@ class BlockchainRiskAnalysisAgent {
         }
         const activity_risk_score = this.SCORES[activity_risk_level];
 
+        // Freeze Key Risk — freeze_key allows admin to freeze any holder's balance
+        const freeze_risk_level = scannerData.freeze_key_exists === true ? "MEDIUM_HIGH" : "LOW";
+        const freeze_risk_score = this.SCORES[freeze_risk_level];
+
+        // Wipe Key Risk — Solana has no wipe concept, always LOW
+        const wipe_risk_level = "LOW";
+        const wipe_risk_score = this.SCORES[wipe_risk_level];
+
+        // Mutable Metadata Risk — Solana-specific: mutable metadata allows name/symbol changes (impersonation risk)
+        const mutable_metadata_risk = scannerData.metadata_is_mutable === true ? "MEDIUM" : "LOW";
+        const mutable_metadata_score = this.SCORES[mutable_metadata_risk];
+
         // 🔟 Improved Summary
         const analysis_summary = this._generateSummary({
             mint_risk_level,
@@ -137,7 +151,10 @@ class BlockchainRiskAnalysisAgent {
             holder_concentration_risk,
             treasury_dump_risk,
             age_risk_level,
-            activity_risk_level
+            activity_risk_level,
+            freeze_risk_level,
+            wipe_risk_level,
+            mutable_metadata_risk
         });
 
         // 🎯 Final Output Format
@@ -155,6 +172,12 @@ class BlockchainRiskAnalysisAgent {
             "age_risk_score": age_risk_score,
             "activity_risk_level": activity_risk_level,
             "activity_risk_score": activity_risk_score,
+            "freeze_risk_level": freeze_risk_level,
+            "freeze_risk_score": freeze_risk_score,
+            "wipe_risk_level": wipe_risk_level,
+            "wipe_risk_score": wipe_risk_score,
+            "mutable_metadata_risk": mutable_metadata_risk,
+            "mutable_metadata_score": mutable_metadata_score,
             "analysis_summary": analysis_summary
         };
     }
@@ -168,47 +191,45 @@ class BlockchainRiskAnalysisAgent {
         let mediumRisks = [];
         let lowRisks = [];
 
+        const HIGH_SET = new Set(["HIGH", "VERY_HIGH", "MEDIUM_HIGH"]);
+        const MED_SET = new Set(["MEDIUM"]);
+
         // Distribute risks into severity buckets
-        if (risks.mint_risk_level === "HIGH" || risks.mint_risk_level === "VERY_HIGH") highRisks.push("mint control");
-        else if (risks.mint_risk_level === "MEDIUM") mediumRisks.push("mint control");
-        else lowRisks.push("mint control");
+        const classify = (level, label) => {
+            if (HIGH_SET.has(level)) highRisks.push(label);
+            else if (MED_SET.has(level)) mediumRisks.push(label);
+            else lowRisks.push(label);
+        };
 
-        if (risks.admin_control_risk === "HIGH" || risks.admin_control_risk === "VERY_HIGH") highRisks.push("admin control");
-        else if (risks.admin_control_risk === "MEDIUM") mediumRisks.push("admin control");
-        else lowRisks.push("admin control");
+        classify(risks.mint_risk_level, "mint control");
+        classify(risks.admin_control_risk, "admin control");
+        classify(risks.holder_concentration_risk, "holder concentration");
+        classify(risks.treasury_dump_risk, "treasury concentration");
+        classify(risks.age_risk_level, "token age");
+        classify(risks.activity_risk_level, "activity level");
+        classify(risks.freeze_risk_level, "freeze authority");
+        classify(risks.wipe_risk_level, "wipe authority");
+        if (risks.mutable_metadata_risk) classify(risks.mutable_metadata_risk, "mutable metadata");
 
-        if (risks.holder_concentration_risk === "HIGH" || risks.holder_concentration_risk === "VERY_HIGH") highRisks.push("holder concentration");
-        else if (risks.holder_concentration_risk === "MEDIUM") mediumRisks.push("holder concentration");
-        else lowRisks.push("holder concentration");
-
-        if (risks.treasury_dump_risk === "HIGH" || risks.treasury_dump_risk === "VERY_HIGH") highRisks.push("treasury concentration");
-        else if (risks.treasury_dump_risk === "MEDIUM") mediumRisks.push("treasury concentration");
-        else lowRisks.push("treasury concentration");
-
-        if (risks.age_risk_level === "VERY_HIGH" || risks.age_risk_level === "HIGH") highRisks.push("token age");
-        else if (risks.age_risk_level === "MEDIUM") mediumRisks.push("token age");
-        else lowRisks.push("token age");
-
-        if (risks.activity_risk_level === "HIGH" || risks.activity_risk_level === "VERY_HIGH") highRisks.push("activity level");
-        else if (risks.activity_risk_level === "MEDIUM") mediumRisks.push("activity level");
-        else lowRisks.push("activity level");
-
-        let summaryStr = "Token shows ";
-
-        if (mediumRisks.length > 0) {
-            summaryStr += `medium ${mediumRisks.join(" and ")} risk but `;
-        }
-
-        if (lowRisks.length > 0) {
-            // Picking a couple to demonstrate low risk
-            const lowSample = lowRisks.slice(0, 2).join(" and ");
-            summaryStr += `low ${lowSample} risk. `;
-        } else {
-            summaryStr += "no distinctly low risk areas. ";
-        }
+        // CRITICAL: Lead with highest severity first — never bury HIGH risks behind LOW
+        let summaryStr = "";
 
         if (highRisks.length > 0) {
-            summaryStr += `However, it exhibits HIGH risk in ${highRisks.join(", ")}. Overall project appears DANGEROUS and should be avoided or approached with extreme caution.`;
+            summaryStr += `Token exhibits HIGH risk in ${highRisks.join(", ")}. `;
+        }
+        if (mediumRisks.length > 0) {
+            summaryStr += `${highRisks.length > 0 ? 'Additionally, m' : 'M'}edium risk detected in ${mediumRisks.join(" and ")}. `;
+        }
+        if (lowRisks.length > 0) {
+            const lowSample = lowRisks.slice(0, 3).join(" and ");
+            summaryStr += `Low risk observed in ${lowSample}. `;
+        }
+
+        // Overall verdict
+        if (highRisks.length >= 3) {
+            summaryStr += `Overall project appears DANGEROUS and should be avoided or approached with extreme caution.`;
+        } else if (highRisks.length > 0) {
+            summaryStr += `Overall project requires significant caution due to flagged high-risk areas.`;
         } else if (mediumRisks.length > 0) {
             summaryStr += `Overall project appears moderately safe but flagged areas (${mediumRisks.join(", ")}) should be monitored.`;
         } else {

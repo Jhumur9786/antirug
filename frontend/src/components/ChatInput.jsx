@@ -25,31 +25,57 @@ export default function ChatInput({ onSend, loading }) {
     }
   }, [text])
 
+  // Exact match from mockup lines 283-298
   return (
-    <div className="relative flex items-end w-full glass rounded-2xl p-2 shadow-2xl">
-      <textarea
-        ref={textareaRef}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder="Analyze a token (e.g. 0.0.731861) or ask a question..."
-        className="w-full max-h-[150px] bg-transparent text-slate-200 text-sm px-4 py-3 outline-none resize-none chat-scrollbar"
-        rows={1}
-        disabled={loading}
-      />
-      <button
-        onClick={handleSend}
-        disabled={!text.trim() || loading}
-        className={`flex-shrink-0 ml-2 mb-1 w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-          text.trim() && !loading 
-            ? 'bg-white text-black hover:bg-gray-200 shadow-sm' 
-            : 'bg-[#111111] text-slate-600 border border-[#333333] cursor-not-allowed'
-        }`}
-      >
-        <svg className="w-5 h-5 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-      </button>
+    <div className="absolute bottom-0 left-0 w-full p-4 md:p-8 bg-gradient-to-t from-background via-background to-transparent pt-20 z-20">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-surface-container border-4 border-black p-2 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] flex items-center relative group focus-within:-translate-y-1 focus-within:shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] transition-all duration-200">
+          <div className="pl-4 pr-2 flex items-center text-primary-container">
+            <span className="material-symbols-outlined font-bold">terminal</span>
+          </div>
+          <textarea
+            ref={textareaRef}
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder="Send a command or contract address..."
+            className="w-full bg-transparent border-none text-on-surface placeholder:text-on-surface-variant font-body-lg text-body-lg py-4 px-2 focus:outline-none focus:ring-0 resize-none max-h-[150px]"
+            rows={1}
+            disabled={loading}
+          />
+          <button
+            onClick={handleSend}
+            disabled={!text.trim() || loading}
+            className={`w-12 h-12 ml-2 border-2 border-black rounded-xl flex items-center justify-center transition-all duration-200 ${
+              text.trim() && !loading 
+                ? 'bg-primary-container text-on-primary-fixed shadow-[2px_2px_0px_0px_rgba(0,0,0,1),0_0_15px_rgba(0,255,136,0.4)] hover:scale-105 hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1),0_0_25px_rgba(0,255,136,0.7)] active:translate-y-1 active:shadow-none' 
+                : 'bg-surface-variant text-on-surface-variant cursor-not-allowed opacity-50'
+            }`}
+          >
+            <span className="material-symbols-outlined">send</span>
+          </button>
+        </div>
+        <div className="mt-4 hidden md:flex justify-center gap-3 flex-wrap">
+          <span 
+            onClick={() => { setText('/scan '); textareaRef.current?.focus(); }} 
+            className="text-xs font-code-sm text-primary-container bg-surface-container border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-md px-3 py-1.5 hover:bg-surface-container-high hover:-translate-y-0.5 cursor-pointer transition-all"
+          >
+            /scan [address]
+          </span>
+          <span 
+            onClick={() => { setText('/monitor '); textareaRef.current?.focus(); }} 
+            className="text-xs font-code-sm text-on-surface-variant bg-surface-container border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-md px-3 py-1.5 hover:bg-surface-container-high hover:-translate-y-0.5 cursor-pointer transition-all"
+          >
+            /monitor [address]
+          </span>
+          <span 
+            onClick={() => { onSend('/explain'); setText(''); }} 
+            className="text-xs font-code-sm text-on-surface-variant bg-surface-container border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] rounded-md px-3 py-1.5 hover:bg-surface-container-high hover:-translate-y-0.5 cursor-pointer transition-all"
+          >
+            /explain
+          </span>
+        </div>
+      </div>
     </div>
   )
 }

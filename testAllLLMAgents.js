@@ -3,13 +3,13 @@
  *  HARD TEST: Verify ALL LLM-integrated agents produce AI output
  * ═══════════════════════════════════════════════════════════════
  */
-require("dotenv").config({ path: "/Users/tutul/Documents/ruguard/.env" });
+require("dotenv").config({ path: "/Users/tutul/Documents/antirug/.env" });
 
-const SentimentAnalysisAgent = require("/Users/tutul/Documents/ruguard/SentimentAnalysisAgent");
-const RiskScoringAgent = require("/Users/tutul/Documents/ruguard/RiskScoringAgent");
-const RugPredictorAgent = require("/Users/tutul/Documents/ruguard/RugPredictorAgent");
-const AlertAgent = require("/Users/tutul/Documents/ruguard/AlertAgent");
-const ConversationalAgent = require("/Users/tutul/Documents/ruguard/ConversationalAgent");
+const SentimentAnalysisAgent = require("/Users/tutul/Documents/antirug/SentimentAnalysisAgent");
+const RiskScoringAgent = require("/Users/tutul/Documents/antirug/RiskScoringAgent");
+const RugPredictorAgent = require("/Users/tutul/Documents/antirug/RugPredictorAgent");
+const AlertAgent = require("/Users/tutul/Documents/antirug/AlertAgent");
+const ConversationalAgent = require("/Users/tutul/Documents/antirug/ConversationalAgent");
 
 let passed = 0, failed = 0;
 

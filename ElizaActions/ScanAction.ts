@@ -11,9 +11,9 @@ export const scanTokenAction: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => true,
     handler: async (runtime: IAgentRuntime, message: Memory, state?: State, options?: any, callback?: HandlerCallback): Promise<any> => {
         const text = message.content?.text || "";
-        const match = text.match(/0\.0\.\d+/);
+        const match = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
         if (!match) {
-            if (callback) callback({ text: "Please specify a valid Hedera token ID to scan." });
+            if (callback) callback({ text: "Please specify a valid Solana token address to scan." });
             return false;
         }
         const tokenId = match[0];

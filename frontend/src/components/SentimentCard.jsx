@@ -1,7 +1,9 @@
 export default function SentimentCard({ data }) {
   const sentiment = data.agent_data?.sentiment || data.sentiment || {}
   const communityLabel = sentiment.community_sentiment || sentiment.sentiment_security_rating || sentiment.overall_sentiment || 'N/A'
-  const communityRisk = sentiment.community_risk_index ?? data.community_risk_index ?? 0
+  const communityRisk = sentiment.community_intelligence_score !== undefined 
+    ? Math.max(0, 100 - sentiment.community_intelligence_score) 
+    : (sentiment.community_risk_index ?? data.community_risk_index ?? 0)
   const redditMentions = sentiment.reddit_mentions ?? data.reddit_mentions ?? 0
   const redditBuzz = sentiment.reddit_social_buzz ?? data.reddit_social_buzz ?? 0
   const redditTrust = sentiment.reddit_dev_trust ?? data.reddit_dev_trust ?? 0.5
@@ -16,7 +18,7 @@ export default function SentimentCard({ data }) {
   const style = getSentimentStyle(communityLabel)
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="bg-surface-container border-4 border-black rounded-xl p-6 cel-shadow">
       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-5 flex items-center gap-2">
         <span>💬</span> Sentiment & Community
       </h3>

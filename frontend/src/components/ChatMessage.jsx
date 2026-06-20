@@ -1,7 +1,8 @@
 import ReactMarkdown from 'react-markdown'
 import { useState } from 'react'
+import ScanReportCard from './ScanReportCard'
 
-export default function ChatMessage({ role, content }) {
+export default function ChatMessage({ role, content, isReport, reportData }) {
   const isAgent = role === 'assistant'
   const [copied, setCopied] = useState(false)
 
@@ -11,42 +12,56 @@ export default function ChatMessage({ role, content }) {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  return (
-    <div className={`flex w-full mb-6 ${isAgent ? 'justify-start' : 'justify-end'}`}>
-      {isAgent && (
-        <div className="flex-shrink-0 mr-3 mt-1">
-          <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center shrink-0 border border-[#333] shadow-sm overflow-hidden">
-            <img src="/logo.png" alt="Agent" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-sm">🛡️</span>'; }} />
-          </div>
+  if (isAgent) {
+    return (
+      <div className="flex items-end gap-4 self-start max-w-[90%] md:max-w-[75%] group mt-4">
+        {/* AI Avatar — exact match from mockup line 199-202 */}
+        <div className="w-14 h-14 flex-shrink-0 rounded-full border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-surface-container relative">
+          <div className="absolute inset-0 bg-primary-container opacity-20 animate-pulse"></div>
+          <img 
+            src="/logo.png" 
+            alt="Detective Mascot Avatar" 
+            className="w-full h-full object-cover relative z-10" 
+            onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-2xl relative z-10">🛡️</span>'; }} 
+          />
         </div>
-      )}
 
-      <div className={`relative max-w-[85%] sm:max-w-[75%] px-5 py-4 rounded-2xl ${
-        isAgent 
-          ? 'bg-[#111111] border border-[#333333] text-slate-200 rounded-tl-sm shadow-sm' 
-          : 'bg-white text-black rounded-tr-sm shadow-sm'
-      }`}>
-        {isAgent ? (
-          <div className="markdown-body text-sm">
-            <ReactMarkdown>{content}</ReactMarkdown>
-          </div>
+        {/* AI Bubble */}
+        {isReport && reportData ? (
+          <ScanReportCard data={reportData} />
         ) : (
-          <p className="text-sm whitespace-pre-wrap">{content}</p>
+          <div className="relative bg-gradient-to-br from-surface-container to-surface-container-high border-2 border-black rounded-2xl rounded-bl-none p-6 cel-shadow hover:-translate-y-1 transition-transform font-title-md text-title-md text-on-surface">
+            <div className="markdown-body">
+              <ReactMarkdown>{content}</ReactMarkdown>
+            </div>
+            <button 
+              onClick={copyText}
+              className="absolute -right-12 top-2 p-2 bg-surface-variant border-2 border-black rounded-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] text-on-surface hover:text-primary-container hover:scale-105 transition-all opacity-0 group-hover:opacity-100 flex items-center justify-center"
+              title="Copy message"
+            >
+              {copied ? (
+                <span className="material-symbols-outlined text-sm">check</span>
+              ) : (
+                <span className="material-symbols-outlined text-sm">content_copy</span>
+              )}
+            </button>
+          </div>
         )}
+      </div>
+    )
+  }
 
-        {isAgent && (
-          <button 
-            onClick={copyText}
-            className="absolute -right-8 top-2 p-1.5 text-slate-500 hover:text-white transition-colors rounded-lg hover:bg-white/5 opacity-0 group-hover:opacity-100 md:opacity-100"
-            title="Copy message"
-          >
-            {copied ? (
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-            ) : (
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-            )}
-          </button>
-        )}
+  // User message — exact match from mockup line 208-215
+  return (
+    <div className="flex items-end gap-4 self-end max-w-[90%] md:max-w-[75%] flex-row-reverse">
+      {/* User Avatar */}
+      <div className="w-12 h-12 flex-shrink-0 rounded-full border-2 border-black bg-surface-bright flex items-center justify-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
+        <span className="material-symbols-outlined text-on-surface">person</span>
+      </div>
+
+      {/* User Bubble */}
+      <div className="bg-gradient-to-bl from-surface-bright to-surface-container-highest border-2 border-black rounded-2xl rounded-br-none p-6 cel-shadow hover:-translate-y-1 transition-transform font-body-lg text-body-lg text-on-surface">
+        <p className="leading-relaxed whitespace-pre-wrap">{content}</p>
       </div>
     </div>
   )

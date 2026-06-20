@@ -7,19 +7,18 @@ const BlockchainRiskAnalysisAgent = require("./BlockchainRiskAnalysisAgent");
 const RiskScoringAgent = require("./RiskScoringAgent");
 const RugPredictorAgent = require("./RugPredictorAgent");
 const AlertAgent = require("./AlertAgent");
-import { OpenConvAIClient } from "./openconvai-client";
 
 export const analyzeTokenAction: Action = {
     name: "ANALYZE_TOKEN_RISK",
     similes: ["CHECK_RUG", "ANALYZE", "ASSESS_DANGER", "RUG_CHECK", "SCAN_TOKEN"],
-    description: "Triggers a full mathematical risk analysis on a Hedera token to calculate rug pull probability and security alerts.",
+    description: "Triggers a full mathematical risk analysis on a Solana token to calculate rug pull probability and security alerts.",
     validate: async (runtime: IAgentRuntime, message: Memory) => {
         const text = message.content?.text || "";
-        return /(analyze|check|risk|rug).*(0\.0\.\d+)/i.test(text);
+        return /(analyze|check|risk|rug).*([1-9A-HJ-NP-Za-km-z]{32,44})/i.test(text);
     },
     handler: async (runtime: IAgentRuntime, message: Memory, state?: State, options?: any, callback?: HandlerCallback): Promise<any> => {
         const text = message.content?.text || "";
-        const match = text.match(/0\.0\.\d+/);
+        const match = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
         if (!match) return false;
         const tokenId = match[0];
 
@@ -37,7 +36,7 @@ export const analyzeTokenAction: Action = {
             await Promise.all([
                 sentAgent.fetchCoinGeckoData(symbolMatch),
                 sentAgent.fetchDexData(symbolMatch),
-                sentAgent.fetchGitHubData("https://github.com/hasgraph/hedera-services")
+                sentAgent.fetchGitHubData("https://github.com/solana-labs/solana")
             ]);
             // Sentiment requires analyze() to get the AI summary using the old llmClient
             const sentimentData = await sentAgent.analyzeSentiment(scannerData);

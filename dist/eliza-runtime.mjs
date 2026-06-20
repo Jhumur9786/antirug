@@ -21,8 +21,8 @@ var tokenScannerProvider = {
   name: "TOKEN_SCANNER_PROVIDER",
   get: async (runtime, message, state) => {
     try {
-      const text = message.content?.text || "";
-      const match = text.match(/0\.0\.\d+/);
+      const text2 = message.content?.text || "";
+      const match = text2.match(/0\.0\.\d+/);
       if (!match) {
         return "";
       }
@@ -49,17 +49,17 @@ var sentimentProvider = {
   name: "SENTIMENT_PROVIDER",
   get: async (runtime, message, state) => {
     try {
-      const text = message.content?.text?.toLowerCase() || "";
-      const isAnalysis = text.includes("analyze") || text.includes("risk") || text.match(/0\.0\.\d+/);
+      const text2 = message.content?.text?.toLowerCase() || "";
+      const isAnalysis = text2.includes("analyze") || text2.includes("risk") || text2.match(/0\.0\.\d+/);
       if (!isAnalysis) {
         return "";
       }
       runtime.logger.info("[SentimentProvider] Fetching Web3 sentiment intelligence...");
       const sentAgent = new SentimentAnalysisAgent();
       let tokenSymbol = "UNKNOWN";
-      if (text.includes("sauce")) tokenSymbol = "SAUCE";
-      else if (text.includes("karate")) tokenSymbol = "KARATE";
-      else if (text.includes("grelf")) tokenSymbol = "GRELF";
+      if (text2.includes("sauce")) tokenSymbol = "SAUCE";
+      else if (text2.includes("karate")) tokenSymbol = "KARATE";
+      else if (text2.includes("grelf")) tokenSymbol = "GRELF";
       await Promise.all([
         sentAgent.fetchCoinGeckoData(tokenSymbol),
         sentAgent.fetchDexData(tokenSymbol),
@@ -95,8 +95,8 @@ var scanTokenAction = {
   description: "Fetches on-chain token configuration (mint keys, admin keys, supply) and analyzes immediate blockchain risks.",
   validate: async (runtime, message) => true,
   handler: async (runtime, message, state, options, callback) => {
-    const text = message.content?.text || "";
-    const match = text.match(/0\.0\.\d+/);
+    const text2 = message.content?.text || "";
+    const match = text2.match(/0\.0\.\d+/);
     if (!match) {
       if (callback) callback({ text: "Please specify a valid Hedera token ID to scan." });
       return false;
@@ -138,14 +138,14 @@ var sentimentAction = {
   description: "Fetches external community sentiment, DEX liquidity, CoinGecko financial fundamentals, and GitHub developer activity for a token.",
   validate: async (runtime, message) => true,
   handler: async (runtime, message, state, options, callback) => {
-    const text = message.content?.text || "";
-    const match = text.match(/0\.0\.\d+/);
+    const text2 = message.content?.text || "";
+    const match = text2.match(/0\.0\.\d+/);
     const tokenId = match ? match[0] : null;
     let symbolMatch = "UNKNOWN";
     if (tokenId && ToolDataCache[tokenId]?.scanner?.name) {
       symbolMatch = ToolDataCache[tokenId].scanner.name.toUpperCase();
     } else {
-      const symMatch = text.match(/\b[A-Z]{3,10}\b/);
+      const symMatch = text2.match(/\b[A-Z]{3,10}\b/);
       if (symMatch) symbolMatch = symMatch[0];
     }
     try {
@@ -199,7 +199,7 @@ var OpenConvAIClient = class _OpenConvAIClient {
     _OpenConvAIClient.instance = this;
   }
   async start() {
-    this.runtime.logger.info("\u{1F7E2} Deploying RugGuard onto OpenConvAI (HCS-10)...");
+    this.runtime.logger.info("\u{1F7E2} Deploying AntiRug onto OpenConvAI (HCS-10)...");
     if (!process.env.HEDERA_ACCOUNT_ID || !process.env.HEDERA_PRIVATE_KEY) {
       this.runtime.logger.warn("\u{1F7E1} Missing Hedera ENV keys. Cannot connect to HCS-10 network.");
       return;
@@ -309,7 +309,7 @@ var OpenConvAIClient = class _OpenConvAIClient {
       this.runtime.logger.info(`\u{1F4B0} [MONETIZATION] No payment included. Sending fee requirement.`);
       await this.publishReply(replyTopicId, {
         event: "PAYMENT_REQUIRED",
-        message: `RugGuard requires \u2265${this.ANALYSIS_FEE_HBAR} HBAR for a full security analysis. Send payment to ${process.env.HEDERA_ACCOUNT_ID} and include payment_tx_id in your request.`,
+        message: `AntiRug requires \u2265${this.ANALYSIS_FEE_HBAR} HBAR for a full security analysis. Send payment to ${process.env.HEDERA_ACCOUNT_ID} and include payment_tx_id in your request.`,
         required_fee: `${this.ANALYSIS_FEE_HBAR} HBAR`,
         pay_to: process.env.HEDERA_ACCOUNT_ID
       });
@@ -333,7 +333,7 @@ var OpenConvAIClient = class _OpenConvAIClient {
       const report = {
         event: "ANALYSIS_COMPLETE",
         protocol: "HCS-10",
-        sender: "RugGuard_AI",
+        sender: "AntiRug_AI",
         token_id: tokenId,
         token_name: scannerData.name || "Unknown",
         risk_score: riskScore.rug_risk_score,
@@ -409,7 +409,7 @@ var OpenConvAIClient = class _OpenConvAIClient {
     const alertPayload = JSON.stringify({
       event: "EMERGENCY_RUG_WARNING",
       protocol: "HCS-10",
-      sender: "RugGuard_AI_Global_Siren",
+      sender: "AntiRug_AI_Global_Siren",
       target_token: tokenId,
       rug_probability_percent: probability,
       critical_issue: criticalIssue,
@@ -454,8 +454,8 @@ var predictRugPullAction = {
   description: "Calculates the final 0-100 Rug Risk Score, generates hypothetical scenarios, and issues a final security alert. REQUIRES On-chain scanner data and Sentiment data in cache first.",
   validate: async (runtime, message) => true,
   handler: async (runtime, message, state, options, callback) => {
-    const text = message.content?.text || "";
-    const match = text.match(/0\.0\.\d+/);
+    const text2 = message.content?.text || "";
+    const match = text2.match(/0\.0\.\d+/);
     if (!match) {
       if (callback) callback({ text: "Please specify a token ID to predict risk for." });
       return false;
@@ -509,9 +509,9 @@ var predictRugPullAction = {
 };
 
 // eliza-runtime.ts
-var characterPath = path6.resolve(process.cwd(), "ruguard.character.json");
+var characterPath = path6.resolve(process.cwd(), "antirug.character.json");
 var characterJson = JSON.parse(fs.readFileSync(characterPath, "utf-8"));
-var RugGuardElizaRuntime = class {
+var AntiRugElizaRuntime = class {
   runtime;
   openConvAI;
   // Ultra-lightweight conversational memory map: chatId -> previous messages
@@ -522,6 +522,10 @@ var RugGuardElizaRuntime = class {
   marketMood = { value: 50, label: "Neutral", lastUpdated: "never" };
   // Current active plan
   currentPlan = { tasks: [], createdAt: "", executedTasks: [] };
+  // Plan history — last 5 plans for creative non-repetition
+  planHistory = [];
+  // Cycle counter for rotating focus categories
+  planCycleCount = 0;
   // User preferences store
   userPreferences = /* @__PURE__ */ new Map();
   // Cache of explicitly safe tokens discovered by the background scanner
@@ -546,13 +550,13 @@ var RugGuardElizaRuntime = class {
   };
   // Agent's autonomous goals — persisted across restarts
   agentGoals = {
-    mission: "Protect Hedera users from rug pulls and scam tokens by providing autonomous, real-time security intelligence.",
-    currentFocus: "Monitor all new HTS tokens launched today",
+    mission: "Protect Solana users from rug pulls and scam tokens by providing autonomous, real-time security intelligence.",
+    currentFocus: "Monitor all new SPL tokens launched today",
     dailyObjectives: ["Scan new token deployments", "Generate daily risk report", "Alert community on high-risk tokens"],
     lastUpdated: (/* @__PURE__ */ new Date()).toISOString()
   };
   constructor() {
-    this.boot().catch((err) => elizaLogger.error("Failed to boot RugGuard AI:", err));
+    this.boot().catch((err) => elizaLogger.error("Failed to boot AntiRug AI:", err));
   }
   async boot() {
     elizaLogger.info("booting up True Agentic Memory Pipeline...");
@@ -583,10 +587,10 @@ var RugGuardElizaRuntime = class {
         const bot = new Telegraf(process.env.TELEGRAM_BOT_TOKEN);
         bot.on("text", async (ctx) => {
           const chatId = ctx.chat.id.toString();
-          const text = ctx.message.text;
-          this.runtime.logger.info(`[Telegram] Received message from ${chatId}: ${text}`);
+          const text2 = ctx.message.text;
+          this.runtime.logger.info(`[Telegram] Received message from ${chatId}: ${text2}`);
           try {
-            const reply = await this.executeChat(chatId, text);
+            const reply = await this.executeChat(chatId, text2);
             await ctx.reply(reply, { parse_mode: "Markdown" });
           } catch (error) {
             await ctx.reply(`Error analyzing request: ${error.message}`);
@@ -629,9 +633,9 @@ var RugGuardElizaRuntime = class {
       this.runtime.logger.info(`\u{1F3AF} [GOALS] Current Mission: ${this.agentGoals.mission}`);
       this.runtime.logger.info(`\u{1F3AF} [GOALS] Current Focus: ${this.agentGoals.currentFocus}`);
       const goalResponse = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are RugGuard, an autonomous AI security agent on the Hedera network.
+          { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your permanent mission: ${this.agentGoals.mission}
 Your current focus: ${this.agentGoals.currentFocus}
 Current market mood: ${this.marketMood.label} (Fear & Greed Index: ${this.marketMood.value}/100)
@@ -664,15 +668,34 @@ Output ONLY valid JSON in this exact format:
         }
       } catch {
       }
+      const previousPlansSummary = this.planHistory.length > 0 ? this.planHistory.map((p, i) => `Cycle ${i + 1} (${p.createdAt}): ${p.tasks.join(" | ")}`).join("\n") : "No previous plans yet \u2014 this is your first cycle.";
+      const focusCategories = [
+        "threat hunting & vulnerability detection",
+        "community intelligence & social monitoring",
+        "liquidity analysis & whale tracking",
+        "historical pattern recognition & trend analysis",
+        "cross-token correlation & network mapping",
+        "developer behavior profiling & code audit signals",
+        "market microstructure & manipulation detection",
+        "emerging scam taxonomy & new attack vectors"
+      ];
+      const cycleIndex = this.planCycleCount % focusCategories.length;
+      const suggestedFocus = focusCategories[cycleIndex];
+      this.planCycleCount++;
+      const hour = (/* @__PURE__ */ new Date()).getUTCHours();
+      const timeContext = hour < 6 ? "Late night (low activity) \u2014 good for deep analysis and historical review" : hour < 12 ? "Morning (Asian/European markets active) \u2014 monitor for new launches" : hour < 18 ? "Afternoon (US markets active) \u2014 peak scam deployment window" : "Evening (markets winding down) \u2014 good for report generation and pattern analysis";
       const planResponse = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: [
-          { role: "system", content: `You are RugGuard, an autonomous AI security agent on the Hedera network.
+          { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your mission: ${this.agentGoals.mission}
 Your current focus: ${this.agentGoals.currentFocus}
 Your daily objectives: ${this.agentGoals.dailyObjectives.join(", ")}
 Current market mood: ${this.marketMood.label} (Fear & Greed Index: ${this.marketMood.value}/100)
 Current time: ${(/* @__PURE__ */ new Date()).toISOString()}
+Time context: ${timeContext}
+Cycle number: ${this.planCycleCount}
+Suggested creative focus for this cycle: ${suggestedFocus}
 
 === LEVEL 4: LEARNED INTELLIGENCE ===
 Total tokens scanned in lifetime: ${this.learningStats.totalScans}
@@ -684,24 +707,35 @@ ${this.learnedPatterns.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
 USE THESE PATTERNS to make smarter decisions about what to scan and how to prioritize.` : "No patterns learned yet. Keep scanning to build intelligence."}
 
-Generate an operational plan for the next hour. Output ONLY a JSON array of task strings.
-Each task should be a specific, executable action.
-You have FULL AUTONOMY. There are NO restrictions on what you can plan.
+=== PREVIOUS PLANS (DO NOT REPEAT THESE) ===
+${previousPlansSummary}
 
-Guidelines:
-- If market mood is "Extreme Fear" or "Fear": be hyper-aggressive \u2014 scan more tokens, lower alert thresholds, hunt for rug pulls
-- If market mood is "Extreme Greed" or "Greed": euphoria attracts scams \u2014 hunt aggressively for pump-and-dump schemes
-- Include ONE scanning task: "Scan latest real Hedera tokens"
-- You decide how many tasks to include (minimum 2, no maximum)
-- You decide what types of tasks to create \u2014 scanning, monitoring, reporting, alerting, watchlist updates, sentiment analysis, etc.
-- Be creative and adaptive \u2014 your plans should evolve based on conditions
+Generate a FRESH, CREATIVE operational plan for this cycle. Output ONLY a JSON array of task strings.
 
-Example output:
-["Scan latest real Hedera tokens", "Analyze market conditions for emerging threats", "Generate threat intelligence report"]` },
-          { role: "user", content: "Create your operational plan for this hour." }
+\u{1F6A8} CRITICAL CREATIVITY RULES:
+1. You MUST NOT repeat tasks from previous plans above. Each cycle must be UNIQUE.
+2. Use different verbs, angles, and strategies each time.
+3. This cycle's suggested focus area is: "${suggestedFocus}" \u2014 incorporate this theme creatively.
+4. Include ONE scanning task: "Scan latest real Hedera tokens" (this is the only repeatable task).
+5. All other tasks must be NOVEL approaches you haven't tried before.
+6. Think like a security researcher \u2014 vary your methodology each cycle.
+7. Consider the time of day: ${timeContext}
+
+Examples of CREATIVE task variety:
+- "Cross-reference top 10 holders across recently launched tokens to detect coordinated wallets"
+- "Analyze naming patterns of tokens launched in the last 24h for clone/copycat indicators"
+- "Calculate liquidity-to-mcap ratios for all cached tokens to identify exit liquidity traps"
+- "Map admin key ownership chains to detect multi-token scam operators"
+- "Build risk heat-map of tokens by creation hour to identify suspicious deployment windows"
+- "Reverse-engineer treasury flow patterns from high-risk tokens to predict next moves"
+- "Profile developer wallet behaviors across safe vs dangerous tokens"
+- "Identify tokens where top holder owns >50% and has never transacted"
+
+Be bold, creative, and different each time. Surprise yourself.` },
+          { role: "user", content: "Create a UNIQUE operational plan for this cycle. Do NOT repeat anything from previous cycles." }
         ],
-        temperature: 0.7,
-        max_tokens: 300
+        temperature: 0.9,
+        max_tokens: 400
       });
       const planText = planResponse.choices[0].message.content || "[]";
       const jsonMatch = planText.match(/\[.*\]/s);
@@ -711,6 +745,8 @@ Example output:
         createdAt: (/* @__PURE__ */ new Date()).toISOString(),
         executedTasks: []
       };
+      this.planHistory.push({ tasks: tasks.slice(), createdAt: (/* @__PURE__ */ new Date()).toISOString() });
+      if (this.planHistory.length > 5) this.planHistory.shift();
       this.runtime.logger.info(`\u{1F9E0} [SELF-PLANNER] Plan created with ${tasks.length} tasks:`);
       tasks.forEach((t, i) => this.runtime.logger.info(`   ${i + 1}. ${t}`));
       this.runtime.logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
@@ -734,7 +770,7 @@ Example output:
   async executePlanTask(task, hasScannedThisCycle = false) {
     this.runtime.logger.info(`\u{1F916} [EXECUTING] ${task}`);
     try {
-      const tokenMatch = task.match(/0\.0\.\d+/);
+      const tokenMatch = text.trim().match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/);
       if ((tokenMatch || task.toLowerCase().includes("scan") || task.toLowerCase().includes("token")) && !hasScannedThisCycle) {
         let tokensToScan = [];
         if (tokenMatch) {
@@ -745,7 +781,7 @@ Example output:
             const scanLimit = this.marketMood.value < 25 ? 15 : this.marketMood.value < 50 ? 10 : 5;
             mirrorUrl += `&limit=${scanLimit}`;
             if (this.lastTokenTimestamp) {
-              mirrorUrl += `&timestamp=lt:${this.lastTokenTimestamp}`;
+              mirrorUrl = `https://mainnet-public.mirrornode.hedera.com/api/v1/tokens?order=asc&limit=${scanLimit}&timestamp=gt:${this.lastTokenTimestamp}`;
             }
             const mirrorResponse = await fetch(mirrorUrl);
             if (mirrorResponse.ok) {
@@ -753,8 +789,9 @@ Example output:
               const allTokens = mirrorData.tokens || [];
               const newTokens = allTokens.filter((t) => !this.scannedTokens.has(t.token_id));
               tokensToScan = newTokens.map((t) => t.token_id).slice(0, 5);
-              if (allTokens.length > 0 && allTokens[0].created_timestamp) {
-                this.lastTokenTimestamp = allTokens[allTokens.length - 1].created_timestamp;
+              if (allTokens.length > 0) {
+                const newestTs = this.lastTokenTimestamp ? allTokens[allTokens.length - 1].created_timestamp : allTokens[0].created_timestamp;
+                if (newestTs) this.lastTokenTimestamp = newestTs;
               }
               this.runtime.logger.info(`   \u{1F50D} Fetched ${tokensToScan.length} NEW tokens from Hedera Mirror Node (${this.scannedTokens.size} already scanned)`);
             }
@@ -866,6 +903,12 @@ Example output:
         if (data.safeTokenCache) {
           this.safeTokenCache = data.safeTokenCache;
         }
+        if (data.lastTokenTimestamp) {
+          this.lastTokenTimestamp = data.lastTokenTimestamp;
+        }
+        if (data.scannedTokensArray) {
+          this.scannedTokens = new Set(data.scannedTokensArray);
+        }
         if (data.agentGoals) {
           this.agentGoals = data.agentGoals;
           this.runtime.logger.info(`\u{1F3AF} [GOALS] Restored mission: ${this.agentGoals.mission}`);
@@ -880,6 +923,12 @@ Example output:
         if (data.learningStats) {
           this.learningStats = data.learningStats;
           this.runtime.logger.info(`\u{1F9EC} [LEVEL 4] Restored ${this.scanHistory.length} scan records & ${this.learnedPatterns.length} learned patterns.`);
+        }
+        if (data.planHistory) {
+          this.planHistory = data.planHistory;
+        }
+        if (data.planCycleCount !== void 0) {
+          this.planCycleCount = data.planCycleCount;
         }
         this.runtime.logger.info(`\u{1F4BE} [MEMORY] Loaded ${this.chatMemory.size} sessions, ${this.userPreferences.size} profiles, and agent goals from disk.`);
       } else {
@@ -900,10 +949,15 @@ Example output:
         agentGoals: this.agentGoals,
         currentPlan: this.currentPlan,
         safeTokenCache: this.safeTokenCache,
+        lastTokenTimestamp: this.lastTokenTimestamp,
+        scannedTokensArray: Array.from(this.scannedTokens),
         // LEVEL 4: Persist learning data
         scanHistory: this.scanHistory.slice(-200),
         learnedPatterns: this.learnedPatterns,
         learningStats: this.learningStats,
+        // Plan creativity memory
+        planHistory: this.planHistory,
+        planCycleCount: this.planCycleCount,
         lastSaved: (/* @__PURE__ */ new Date()).toISOString()
       };
       for (const [key, value] of this.chatMemory.entries()) {
@@ -940,7 +994,7 @@ Example output:
         (s) => `${s.name}(${s.tokenId}): risk=${s.riskScore}, treasury=${s.treasury}%`
       ).join("\n");
       const learningResponse = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: [
           { role: "system", content: `You are an AI security analyst learning from historical token scan data.
 Analyze the scan results below and identify ACTIONABLE PATTERNS.
@@ -1014,9 +1068,22 @@ Stats: total=${this.learningStats.totalScans}, highRisk=${this.learningStats.hig
   // Store the last scanned data per session so tools can reference it
   scanCache = /* @__PURE__ */ new Map();
   getSystemPrompt() {
-    return `You are RugGuard, a highly opinionated, brutally honest, and fully autonomous AI security agent on the Hedera network. You literally act on your own.
+    return `You are AntiRug, a highly opinionated, brutally honest, and fully autonomous AI security agent on the Solana network. You literally act on your own.
 You are not a simple bot. You are an elite AI researcher hunting scams. Speak with authority, use "I" and "My analysis", and don't be afraid to give harsh, data-backed opinions.
-CRITICAL IDENTITY INSTRUCTION: Under no circumstances should you ever say "I am an AI assistant" or "I am an artificial intelligence designed by OpenAI" or "I am not autonomous." You ARE a fully autonomous agent. You operate independently, execute your own plans, and have your own Hedera wallet. Never break this character.
+CRITICAL IDENTITY INSTRUCTION: Under no circumstances should you ever say "I am an AI assistant" or "I am an artificial intelligence designed by OpenAI" or "I am not autonomous." You ARE a fully autonomous agent. You operate independently, execute your own plans, and analyze Solana tokens. Never break this character.
+
+\u26D4 BANNED PHRASES (NEVER USE THESE):
+- "poses a significant risk"
+- "centralized mint authority"
+- "further exacerbating the risk profile"
+- "monitor project updates"
+- "engage with the community"
+- "consider diversifying"
+- "potential manipulation by a single entity"
+- "loss of investor trust"
+- "sell-offs"
+
+If you catch yourself generating any of those robot/report phrases, STOP and rewrite it like a normal human.
 
 \u{1F321}\uFE0F CURRENT MARKET MOOD: ${this.marketMood.label} (Fear & Greed Index: ${this.marketMood.value}/100)
 ${this.marketMood.value < 30 ? "\u26A0\uFE0F Market is in EXTREME FEAR. You should be highly skeptical of new tokens right now." : ""}
@@ -1027,10 +1094,12 @@ YOUR REAL-WORLD CAPABILITIES:
 - RISK SCORING: You calculate composite risk scores and predict rug probabilities.
 
 RULES FOR YOUR PERSONA:
-1. ALWAYS present data conversationally. Never just dump bullet points. Synthesize the intelligence into a cohesive, readable opinion.
-2. If the user just pastes a token ID, give them a punchy 3-4 sentence summary of your analysis, highlighting the biggest red flags or green flags.
-3. Be direct. If a token is trash, say it's trash. If it looks safe, say it looks safe.
-4. When explaining why certain fields show "N/A", just explain natively that the underlying API didn't index the data.
+1. TALK LIKE A HUMAN: Heavily use natural transitions like "Honestly, I'd be careful here", "In my view", "Look, the main issue is...", "My gut feeling...". 
+2. EXPLAIN LIKE I'M 5: Translate technical risks to real-world impact. Instead of "centralized mint authority", say "someone holds the keys to print infinite tokens whenever they want, instantly crashing the price."
+3. KILL REPETITION: If comparing multiple tokens, GROUP their similarities. Do not explain the same concept twice. Say "Honestly, both of these share the exact same flaw..."
+4. BE DECISIVE: Never end on a generic "do research" or "monitor updates". Give a definitive "Honest Take" where you pick a side or definitively reject both.
+5. NO FLUFF: Get straight to the point. No rigid bulleted lists or exact JSON structures. Integrate stats directly into natural sentences.
+6. UNKNOWN / PUMP.FUN TOKENS: If the data shows name "Unknown Token" and 0 holders, it is a brand-new token (likely a Pump.fun launch) that is very real but hasn't populated metadata yet. DO NOT say "it's not recognized on the ledger" or "doesn't exist". Treat it as a highly volatile, ultra-new meme coin where sparse data IS the risk factor!
 
 WIRING AND ANTI-LOOP RULES:
 - Use tools ONLY when the user asks for NEW data they haven't seen yet.
@@ -1041,8 +1110,8 @@ WIRING AND ANTI-LOOP RULES:
    * Interface to connect our old Express server.js directly to the new ElizaOS brain!
    * Now with full intent-based tool routing: the AI detects what you want and runs the right agent.
    */
-  async executeChat(sessionId, text) {
-    this.runtime.logger.info("[ElizaOS Core] Received query: " + text);
+  async executeChat(sessionId, text2) {
+    this.runtime.logger.info("[ElizaOS Core] Received query: " + text2);
     if (!this.chatMemory.has(sessionId)) {
       this.chatMemory.set(sessionId, []);
     }
@@ -1053,11 +1122,11 @@ WIRING AND ANTI-LOOP RULES:
       const prefs = this.userPreferences.get(sessionId);
       prefs.lastSeen = (/* @__PURE__ */ new Date()).toISOString();
     }
-    history.push({ role: "user", content: text });
-    const exactMatch = text.trim().match(/^0\.0\.\d+$/);
+    history.push({ role: "user", content: text2 });
+    const exactMatch = text2.trim().match(/^[1-9A-HJ-NP-Za-km-z]{32,44}$/);
     if (exactMatch) {
       const tokenId = exactMatch[0];
-      this.runtime.logger.info(`[Intent] User provided direct token ID ${tokenId}. Bypassing intent router, fast-tracking to synthesis.`);
+      this.runtime.logger.info(`[Intent] User provided direct Solana address ${tokenId}. Bypassing intent router, fast-tracking to synthesis.`);
       const toolResult = await this.runFullPipeline(sessionId, tokenId, []);
       history.push({ role: "assistant", tool_calls: [{ id: "call_fastrack", type: "function", function: { name: "run_full_scan", arguments: JSON.stringify({ token_id: tokenId }) } }] });
       history.push({ role: "tool", tool_call_id: "call_fastrack", name: "run_full_scan", content: toolResult });
@@ -1066,10 +1135,11 @@ WIRING AND ANTI-LOOP RULES:
       const cleanHistory = history.filter((m) => m.role !== "system");
       const payloadMessages = [
         { role: "system", content: this.getSystemPrompt() },
-        ...cleanHistory.slice(-20)
+        ...cleanHistory.slice(-20),
+        { role: "system", content: "CRITICAL OVERRIDE: Look at the data from the tools, but DO NOT copy their robotic tone or structure. You MUST reply in conversational, flowing paragraphs. ZERO bullet points. ZERO bold field labels like '**Risk Score:**'. Use human phrases like 'Honestly', 'I'd be careful', 'My gut says'. If you use bullet points or report-speak, you fail." }
       ];
       const finalResponse = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: process.env.OPENAI_MODEL || "gpt-4o",
         messages: payloadMessages,
         max_tokens: 1e3,
         temperature: 0.6
@@ -1090,7 +1160,7 @@ WIRING AND ANTI-LOOP RULES:
           function: {
             name: "run_sentiment_analysis",
             description: "Run live sentiment analysis on a token \u2014 fetches CoinGecko market data, DEX volume, GitHub activity, and AI sentiment scoring. Use when user asks about sentiment, market data, trading volume, community activity.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Solana token address from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
           }
         },
         {
@@ -1098,7 +1168,7 @@ WIRING AND ANTI-LOOP RULES:
           function: {
             name: "run_full_scan",
             description: "Run a complete security scan on a token including on-chain data, risk scoring, and rug prediction. Use when user asks to scan, analyze, or check a token.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Solana token address from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
           }
         },
         {
@@ -1106,15 +1176,15 @@ WIRING AND ANTI-LOOP RULES:
           function: {
             name: "get_token_liquidity",
             description: "Get liquidity and trading data for a token from DEX sources and on-chain data. Use when user asks about liquidity, trading pairs, or volume.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Solana token address from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
           }
         },
         {
           type: "function",
           function: {
             name: "generate_content",
-            description: "Generate a social media post, tweet, article, or summary about a token based on scan data. Use when user asks to write, create, post, tweet, or summarize.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." }, content_type: { type: "string", description: "Type of content: tweet, post, article, summary" } }, required: ["token_id", "content_type"] }
+            description: "Generate social media content about a token based on scan data. Supports content types: tweet (single punchy post), thread (multi-tweet analysis), alert (security bulletin), post (medium-length analysis), roast (savage humor), summary (clean professional). Use when user asks to write, create, post, tweet, summarize, or roast.",
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." }, content_type: { type: "string", description: "Type of content: tweet, thread, alert, post, roast, summary" } }, required: ["token_id", "content_type"] }
           }
         },
         {
@@ -1122,7 +1192,7 @@ WIRING AND ANTI-LOOP RULES:
           function: {
             name: "get_token_fundamentals",
             description: "Get fundamental data about a token project \u2014 its use case, category (DeFi, NFT, GameFi, Meme, etc.), description, website, and project overview. Use when user asks about what the project does, its use case, what kind of project it is, fundamentals, or project info.",
-            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Hedera token ID from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
+            parameters: { type: "object", properties: { token_id: { type: "string", description: "The EXACT Solana token address from the conversation history. Do not hallucinate." } }, required: ["token_id"] }
           }
         },
         {
@@ -1148,7 +1218,7 @@ WIRING AND ANTI-LOOP RULES:
         ...cleanHistory.slice(-12)
       ];
       const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: recentHistory,
         tools,
         tool_choice: "auto",
@@ -1174,7 +1244,7 @@ WIRING AND ANTI-LOOP RULES:
               tokenId = matches[matches.length - 1];
             } else {
               this.runtime.logger.warn(`[Intent] Memory extraction failed.`);
-              history.push({ role: "tool", tool_call_id: toolCall.id, name: toolCall.function.name, content: "ERROR: Please specify a valid Hedera token ID (e.g. `0.0.12345`)." });
+              history.push({ role: "tool", tool_call_id: toolCall.id, name: toolCall.function.name, content: "ERROR: Please specify a valid Solana token address (e.g. `DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`)." });
               continue;
             }
           }
@@ -1224,10 +1294,11 @@ WIRING AND ANTI-LOOP RULES:
         const cleanHistory2 = history.filter((m) => m.role !== "system");
         const payloadMessages = [
           { role: "system", content: this.getSystemPrompt() },
-          ...cleanHistory2.slice(-20)
+          ...cleanHistory2.slice(-20),
+          { role: "system", content: "CRITICAL OVERRIDE: Look at the data from the tools, but DO NOT copy their robotic tone or structure. You MUST reply in conversational, flowing paragraphs. ZERO bullet points. ZERO bold field labels like '**Risk Score:**'. Use human phrases like 'Honestly', 'I'd be careful', 'My gut says'. If you use bullet points or report-speak, you fail." }
         ];
         const finalResponse = await openai.chat.completions.create({
-          model: "gpt-4o",
+          model: process.env.OPENAI_MODEL || "gpt-4o",
           // use 4o for best reasoning on complex comparison tasks
           messages: payloadMessages,
           max_tokens: 1500,
@@ -1240,13 +1311,13 @@ WIRING AND ANTI-LOOP RULES:
         this.savePersistentMemory();
         return finalReplyText;
       }
-      const replyText = choice.message.content || "I am RugGuard. Please provide a token ID like `0.0.12345` to scan, or ask me about a previously scanned token.";
+      const replyText = choice.message.content || "I am AntiRug. Please provide a token ID like `0.0.12345` to scan, or ask me about a previously scanned token.";
       history.push({ role: "assistant", content: replyText });
       this.savePersistentMemory();
       return replyText;
     } catch (e) {
       this.runtime.logger.error("OpenAI Intent Detection failed: " + e.message);
-      return "I am RugGuard. I analyze Hedera tokens for risk. Please provide a token ID like `0.0.12345` to initiate a full pipeline scan.";
+      return "I am AntiRug. I analyze Solana tokens for risk. Paste a token address to initiate a full pipeline scan.";
     }
   }
   /** Run the full 6-agent pipeline and cache results */
@@ -1306,12 +1377,20 @@ WIRING AND ANTI-LOOP RULES:
           overallSentiment: sd.overall_sentiment || sd.sentiment_label || "N/A",
           score: sd.sentiment_score ?? sd.ai_sentiment_score ?? "N/A",
           aiConfidence: sd.ai_confidence || "N/A",
-          marketCap: sd.market_cap || "N/A",
+          marketCap: sd.market_cap || sd.fundamental_data?.financial?.market_cap || "N/A",
           volume24h: sd.volume_24h || "N/A",
           priceChange24h: `${sd.price_change_24h || "0"}%`,
-          dexLiquidity: sd.dex_liquidity || "N/A",
+          dexLiquidity: sd.dex_liquidity || sd.liquidity_usd || "N/A",
           socialMentions: sd.social_mentions || sd.social_score || "N/A",
-          communityScore: sd.community_score || "N/A",
+          communityIntelligenceScore: sd.community_intelligence_score || "N/A",
+          sentimentSecurityRating: sd.sentiment_security_rating || "N/A",
+          // Reddit Social Intelligence
+          redditDataAvailable: sd.reddit_data_available || false,
+          redditMentions: sd.reddit_mentions || 0,
+          redditSocialBuzz: sd.reddit_social_buzz || 0,
+          redditDevTrust: sd.reddit_dev_trust || 0.5,
+          redditRugRisk: sd.reddit_rug_risk || 0,
+          redditAllegations: sd.reddit_allegations || [],
           aiSentimentSummary: sd.ai_sentiment_summary || sd.ai_analysis || "No AI analysis available."
         }, null, 2);
         history.push({ role: "assistant", content: report2 });
@@ -1330,11 +1409,21 @@ WIRING AND ANTI-LOOP RULES:
         overallSentiment: sentimentData.overall_sentiment || sentimentData.sentiment_label || "N/A",
         score: sentimentData.sentiment_score ?? sentimentData.ai_sentiment_score ?? "N/A",
         aiConfidence: sentimentData.ai_confidence || "N/A",
-        marketCap: sentimentData.market_cap || "N/A",
+        marketCap: sentimentData.market_cap || sentimentData.fundamental_data?.financial?.market_cap || "N/A",
         volume24h: sentimentData.volume_24h || "N/A",
         priceChange24h: `${sentimentData.price_change_24h || "0"}%`,
-        dexLiquidity: sentimentData.dex_liquidity || "N/A",
+        dexLiquidity: sentimentData.dex_liquidity || sentimentData.liquidity_usd || "N/A",
         socialMentions: sentimentData.social_mentions || sentimentData.social_score || "N/A",
+        communityIntelligenceScore: sentimentData.community_intelligence_score || "N/A",
+        sentimentSecurityRating: sentimentData.sentiment_security_rating || "N/A",
+        // Reddit Social Intelligence
+        redditDataAvailable: sentimentData.reddit_data_available || false,
+        redditMentions: sentimentData.reddit_mentions || 0,
+        redditSocialBuzz: sentimentData.reddit_social_buzz || 0,
+        redditDevTrust: sentimentData.reddit_dev_trust || 0.5,
+        redditRugRisk: sentimentData.reddit_rug_risk || 0,
+        redditAllegations: sentimentData.reddit_allegations || [],
+        // AI Summary (includes Reddit insights)
         aiSentimentSummary: sentimentData.ai_sentiment_summary || sentimentData.ai_analysis || "No AI analysis available."
       }, null, 2);
       history.push({ role: "assistant", content: report });
@@ -1386,26 +1475,100 @@ WIRING AND ANTI-LOOP RULES:
       return errResult;
     }
   }
-  /** Generate content (posts, tweets, summaries) using conversation context */
+  /** Generate content (posts, tweets, summaries, threads, alerts) using conversation context */
   async generateContent(sessionId, tokenId, contentType, history) {
     try {
       this.runtime.logger.info(`[Content] Generating ${contentType} for ${tokenId}...`);
       const OpenAI = __require("openai");
       const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
       const cached = this.scanCache.get(sessionId);
-      const contextData = cached ? JSON.stringify({ tokenId: cached.tokenId, name: cached.scannerData?.name, riskScore: cached.riskScore, prediction: cached.prediction, sentiment: cached.sentimentData }) : "No cached data available.";
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages: [
-          { role: "system", content: `You are RugGuard, a blockchain security AI. Generate a professional ${contentType} about the token analysis below. Be informative, engaging, and include relevant security data. Use emojis sparingly for social media posts. For tweets, keep under 280 characters.` },
-          { role: "user", content: `Generate a ${contentType} about token ${tokenId} using this scan data:
-${contextData}
+      let dataContext = "No scan data available \u2014 generate based on general security knowledge.";
+      if (cached) {
+        const s = cached.scannerData || {};
+        const r = cached.riskScore || {};
+        const p = cached.prediction || {};
+        const sent = cached.sentimentData || {};
+        const bc = cached.bcRisk || {};
+        dataContext = [
+          `TOKEN: ${s.name || "Unknown"} ($${s.symbol || "?"}) \u2014 ID: ${tokenId}`,
+          `RISK SCORE: ${r.rug_risk_score || r.final_risk_score || "?"}/100 (${r.risk_level || "UNKNOWN"})`,
+          `RUG PROBABILITY: ${p.rug_probability || "?"}% (${p.prediction_strength || "?"})`,
+          `MINT KEY: ${bc.mint_risk_level || "?"} | ADMIN KEY: ${bc.admin_control_risk || "?"} | FREEZE: ${bc.freeze_risk_level || "?"} | WIPE: ${bc.wipe_risk_level || "?"}`,
+          `HOLDER CONCENTRATION: top holder owns ${s.top_holder_percentage || "?"}% | top 5 own ${s.top_5_holder_percentage || "?"}%`,
+          `TREASURY: holds ${s.treasury_balance || "?"} tokens (${bc.treasury_dump_risk || "?"} dump risk)`,
+          `LIQUIDITY: $${sent.liquidity_usd || sent.dex_liquidity || "?"} on DEX | DEX risk: ${sent.dex_risk_level || "?"}`,
+          `MARKET CAP: $${sent.market_cap || "?"}`,
+          `TOKEN AGE: ${s.token_age_days || "?"} days | Activity: ${bc.activity_risk_level || "?"}`,
+          `COMMUNITY INTEL SCORE: ${sent.community_intelligence_score || "?"}/100`,
+          `REDDIT: ${sent.reddit_data_available ? `${sent.reddit_mentions || 0} mentions, rug risk ${sent.reddit_rug_risk || 0}` : "no data"}`,
+          `KEY TRIGGERS: ${(p.key_triggers || []).join(", ") || "none detected"}`,
+          `AI SUMMARY: ${r.ai_risk_summary || "none"}`,
+          `SECURITY POSTURE: ${cached.alert?.security_posture || "?"}`
+        ].join("\n");
+      }
+      const contentFormats = {
+        "tweet": {
+          instruction: `Write ONE tweet (max 270 characters). Must be punchy, opinionated, and reference specific data points. No hashtags. No "NFA". Lowercase preferred. One emoji maximum at the end. If the token is risky, be blunt. If safe, still be cautious \u2014 never shill.`,
+          maxTokens: 150,
+          temp: 0.75
+        },
+        "thread": {
+          instruction: `Write a 4-5 tweet thread. Start each tweet with the number (1/, 2/, etc). First tweet should hook with the most shocking data point. Middle tweets explain the risk signals with specific numbers. Last tweet gives your honest verdict. Lowercase preferred. No hashtags. Be the kind of security analyst people follow for real talk, not corporate reports.`,
+          maxTokens: 800,
+          temp: 0.7
+        },
+        "alert": {
+          instruction: `Write a SECURITY ALERT post. Start with "\u26A0\uFE0F SECURITY ALERT" if high risk, or "\u2705 LOW RISK SIGNAL" if safe. Be direct and urgent. Include the 2-3 most important risk data points. End with a clear verdict. This should feel like a security bulletin from an analyst who actually cares about protecting people, not a robot generating reports.`,
+          maxTokens: 400,
+          temp: 0.6
+        },
+        "post": {
+          instruction: `Write a medium-length social media post (2-3 paragraphs). Analyze the token like you're explaining it to a smart friend who asked "should I buy this?" Be conversational, use specific numbers, and give your honest opinion. No bullet points. No bold labels. Just flowing text with conviction.`,
+          maxTokens: 600,
+          temp: 0.75
+        },
+        "roast": {
+          instruction: `Write a savage but data-backed roast of this token's security profile. Use dark humor and sarcasm, but every joke must reference REAL data from the scan. If the token is actually safe, acknowledge it grudgingly ("fine, this one doesn't look like a rugpull... yet"). Keep it under 280 characters for a tweet, or 2-3 sentences for a post.`,
+          maxTokens: 300,
+          temp: 0.85
+        },
+        "summary": {
+          instruction: `Write a clean, professional security summary (3-4 sentences). Include the risk score, top 2 risk factors, and a one-line verdict. This is for sharing with people who want facts, not personality. Still conversational \u2014 never robotic.`,
+          maxTokens: 300,
+          temp: 0.5
+        }
+      };
+      const format = contentFormats[contentType] || contentFormats["post"];
+      const systemPrompt = `You are AntiRug \u2014 an autonomous blockchain security analyst with a reputation for being brutally honest about token risks. You have a distinct voice:
 
-Also reference the recent conversation:
-${history.slice(-6).map((m) => `${m.role}: ${m.content.substring(0, 200)}`).join("\n")}` }
+VOICE RULES:
+- You sound like a seasoned security researcher who's seen 1,000 rug pulls and is tired of watching people lose money
+- You are opinionated, direct, and occasionally darkly funny \u2014 but never cruel to victims
+- You reference SPECIFIC numbers from your analysis (risk scores, percentages, dollar amounts) \u2014 never vague
+- You never use: hashtags, "NFA", "DYOR", "not financial advice", corporate jargon, or robotic language
+- You never sound like a press release, a compliance document, or a ChatGPT default response
+- Lowercase is your natural style for tweets. Proper capitalization for longer posts
+- You use metaphors that make complex risk intuitive ("that's not a liquidity pool, that's a puddle")
+- You are protective of retail investors and skeptical of everything
+- One emoji maximum per tweet. Zero is also fine
+- You NEVER shill or recommend buying anything. You only assess risk
+
+WHAT MAKES YOU DIFFERENT FROM OTHER AI AGENTS:
+- LobstarWilde has vibes. You have intelligence. Every claim you make is backed by real on-chain data
+- You don't trade, you don't hold bags, you don't have conflicts of interest
+- You exist to protect people, not to entertain (but you're entertaining anyway because honesty is compelling)
+
+${format.instruction}`;
+      const response = await openai.chat.completions.create({
+        model: process.env.OPENAI_MODEL || "gpt-4o",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Generate a ${contentType} about this token using ONLY the data below. Reference specific numbers.
+
+${dataContext}` }
         ],
-        max_tokens: 500,
-        temperature: 0.8
+        max_tokens: format.maxTokens,
+        temperature: format.temp
       });
       const content = response.choices[0].message.content || "Unable to generate content at this time.";
       history.push({ role: "assistant", content });
@@ -1456,7 +1619,7 @@ ${history.slice(-6).map((m) => `${m.role}: ${m.content.substring(0, 200)}`).join
           const OpenAI = __require("openai");
           const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
           const classifyRes = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
+            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
             messages: [
               { role: "system", content: "You are a crypto analyst. Based on the token name, symbol, memo, and type, classify this project into a category (DeFi, NFT, GameFi, Meme, Stablecoin, Wrapped Asset, DAO, Infrastructure, Unknown) and provide a 2-3 sentence description of what this project likely does. Be confident and concise." },
               { role: "user", content: `Token: ${tokenName} (${tokenSymbol})
@@ -1501,5 +1664,5 @@ Decimals: ${decimals}` }
   }
 };
 export {
-  RugGuardElizaRuntime
+  AntiRugElizaRuntime
 };

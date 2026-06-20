@@ -2,14 +2,15 @@ const askLLM = require("./llmClient");
 
 class RugPredictorAgent {
     constructor() {
-        this.modelName = "RugGuard Predictor";
-        this.modelVersion = "RugGuard AI v2";
+        this.modelName = "AntiRug Predictor";
+        this.modelVersion = "AntiRug AI v2";
         this.modelType = "Explainable Risk Fusion AI";
         this.weights = {
-            mint_risk: 0.15, admin_risk: 0.15, treasury_risk: 0.15,
-            holder_concentration: 0.10, activity_risk: 0.10, age_risk: 0.05,
+            mint_risk: 0.13, admin_risk: 0.13, treasury_risk: 0.13,
+            holder_concentration: 0.10, activity_risk: 0.08, age_risk: 0.05,
             community_sentiment: 0.10, liquidity_strength: 0.10,
-            developer_activity: 0.05, external_intelligence: 0.05
+            developer_activity: 0.05, external_intelligence: 0.05,
+            freeze_risk: 0.03, wipe_risk: 0.05
         };
     }
 
@@ -133,12 +134,18 @@ OUTPUT JSON:
 
             let ai_analysis = {};
             try {
-                let llmOutput = await askLLM(prompt);
+                let llmOutput = await askLLM(prompt, { response_format: { type: "json_object" }, max_tokens: 800 });
                 llmOutput = llmOutput.replace(/^```json/mi, "").replace(/```/g, "").trim();
+                const start = llmOutput.indexOf('{');
+                const end = llmOutput.lastIndexOf('}');
+                if (start !== -1 && end !== -1) {
+                    llmOutput = llmOutput.substring(start, end + 1);
+                }
                 ai_analysis = JSON.parse(llmOutput);
                 ai_analysis.prediction_status = "FULL_AI_ANALYSIS";
             } catch (err) {
-                console.warn("[RugPredictorAgent] LLM parsing failed:", err.message);
+                console.error("[RugPredictorAgent] LLM parsing failed:", err.message);
+                console.error("[RugPredictorAgent] Raw LLM Output:", llmOutput);
                 ai_analysis.prediction_status = "DETERMINISTIC_ONLY";
             }
 
@@ -167,7 +174,9 @@ OUTPUT JSON:
             community_sentiment: clamp(s.community_intelligence_score !== undefined ? (100 - s.community_intelligence_score) : (s.community_risk_index || 50)),
             liquidity_strength: clamp(s.dex_risk_level === "HIGH" ? 90 : (s.dex_risk_level === "MEDIUM" ? 40 : 10)),
             developer_activity: clamp(s.developer_activity_risk === "HIGH RISK" ? 90 : (s.developer_activity_risk === "MEDIUM" ? 50 : 10)),
-            external_intelligence: clamp(s.external_risk_rating === "HIGH" ? 85 : (s.external_risk_rating === "LOW" ? 20 : 50))
+            external_intelligence: clamp(s.external_risk_rating === "HIGH" ? 85 : (s.external_risk_rating === "LOW" ? 20 : 50)),
+            freeze_risk: clamp(br.freeze_risk_score || 0),
+            wipe_risk: clamp(br.wipe_risk_score || 0)
         };
     }
 
@@ -187,7 +196,9 @@ OUTPUT JSON:
             { id: "Significant developer inactivity", val: f.developer_activity },
             { id: "Negative community sentiment", val: f.community_sentiment },
             { id: "Centralized administrative control detected", val: f.admin_risk },
-            { id: "High holder concentration", val: f.holder_concentration }
+            { id: "High holder concentration", val: f.holder_concentration },
+            { id: "Freeze authority enables account asset locks", val: f.freeze_risk },
+            { id: "Wipe authority enables token confiscation", val: f.wipe_risk }
         ].sort((a, b) => b.val - a.val).filter(i => i.val > 40).map(i => i.id);
     }
 
@@ -195,7 +206,8 @@ OUTPUT JSON:
         const labels = {
             mint_risk: "Active mint authority", admin_risk: "Centralized governance", treasury_risk: "Treasury concentration",
             holder_concentration: "Holder concentration", activity_risk: "Low transactional activity", community_sentiment: "Negative community sentiment",
-            liquidity_strength: "Shallow liquidity pools", developer_activity: "Developer abandonment", external_intelligence: "Negative external signals"
+            liquidity_strength: "Shallow liquidity pools", developer_activity: "Developer abandonment", external_intelligence: "Negative external signals",
+            freeze_risk: "Freeze authority risk", wipe_risk: "Wipe authority risk"
         };
         return Object.entries(labels).map(([k, label]) => ({ factor: label, val: f[k] || 0 }))
             .sort((a, b) => b.val - a.val);
@@ -219,6 +231,8 @@ OUTPUT JSON:
         if (features.developer_activity > 60) tags.push("DEV_INACTIVE");
         if (features.community_sentiment > 60) tags.push("NEGATIVE_SENTIMENT");
         if (features.holder_concentration > 60) tags.push("WHALE_DOMINATED");
+        if (features.freeze_risk > 40) tags.push("FREEZE_AUTHORITY");
+        if (features.wipe_risk > 40) tags.push("WIPE_AUTHORITY");
         return tags;
     }
 

@@ -2,40 +2,54 @@ import { useState, useRef, useEffect } from 'react'
 import Header from './components/Header'
 import ChatMessage from './components/ChatMessage'
 import ChatInput from './components/ChatInput'
-import SuggestionChips from './components/SuggestionChips'
+import HeroInput from './components/HeroInput'
+import ResultsDashboard from './components/ResultsDashboard'
+import ScanningAnimation from './components/ScanningAnimation'
 
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://ruguard-production-e5cd.up.railway.app')
+const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://antirug-production-e5cd.up.railway.app')
 
 function App() {
   const [messages, setMessages] = useState(() => {
-    const saved = localStorage.getItem('ruguard_chat')
+    const saved = localStorage.getItem('antirug_chat')
     return saved ? JSON.parse(saved) : []
   })
   const [sessionId] = useState(() => {
-    const saved = localStorage.getItem('ruguard_session')
+    const saved = localStorage.getItem('antirug_session')
     if (saved) return saved
     const newId = `session_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`
-    localStorage.setItem('ruguard_session', newId)
+    localStorage.setItem('antirug_session', newId)
     return newId
   })
   const [loading, setLoading] = useState(false)
+  const [activeTab, setActiveTab] = useState('scanner')
+  const [scanResult, setScanResult] = useState(null)
+  const [scanLoading, setScanLoading] = useState(false)
   const messagesEndRef = useRef(null)
 
+  const handleDirectScan = async (tokenId) => {
+    setScanLoading(true)
+    setScanResult(null)
+    try {
+      const response = await fetch(`${API_BASE}/analyze/${tokenId}`)
+      if (!response.ok) throw new Error(`Analysis failed (${response.status})`)
+      const report = await response.json()
+      setScanResult(report)
+    } catch (err) {
+      alert(`⚠️ Connection Error: ${err.message}`)
+    } finally {
+      setScanLoading(false)
+    }
+  }
+
   useEffect(() => {
-    localStorage.setItem('ruguard_chat', JSON.stringify(messages))
+    localStorage.setItem('antirug_chat', JSON.stringify(messages))
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  // Extract Hedera token IDs or EVM addresses from text
+  // Extract Solana token addresses (base58) from text
   const extractTokenId = (text) => {
-    const standardMatch = text.match(/\b(0\.0\.\d+)\b/)
-    if (standardMatch) return standardMatch[1]
-    
-    const evmMatch = text.match(/0x[a-fA-F0-9]{40}\b/)
-    if (evmMatch) {
-      const hexStr = evmMatch[0].replace('0x', '')
-      return `0.0.${parseInt(hexStr, 16)}`
-    }
+    const solanaMatch = text.match(/\b([1-9A-HJ-NP-Za-km-z]{32,44})\b/)
+    if (solanaMatch) return solanaMatch[1]
     return null
   }
 
@@ -52,7 +66,7 @@ function App() {
     const primaryRisk = data.primary_risk || 'None detected'
     const warning = data.primary_warning || 'No critical warnings'
 
-    let md = `## 🛡️ RugGuard Analysis: **${name}** (${symbol})\n\n`
+    let md = `## 🛡️ AntiRug Analysis: **${name}** (${symbol})\n\n`
     md += `| Metric | Value |\n|---|---|\n`
     md += `| **Token ID** | \`${data.token_id}\` |\n`
     md += `| **Risk Score** | **${risk}/100** (${level}) |\n`
@@ -63,7 +77,6 @@ function App() {
     md += `**Primary Risk:** ${primaryRisk}\n\n`
     md += `**⚠️ Warning:** ${warning}\n\n`
 
-    // Recommendations
     const recs = data.recommendations || data.agent_data?.alert?.recommendations || []
     if (recs.length > 0) {
       md += `### 📋 Recommendations\n`
@@ -71,7 +84,6 @@ function App() {
       md += '\n'
     }
 
-    // Key triggers
     const triggers = data.key_triggers || data.agent_data?.prediction?.key_triggers || []
     if (triggers.length > 0) {
       md += `### 🚨 Key Risk Triggers\n`
@@ -113,12 +125,14 @@ function App() {
         const report = await response.json()
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: formatReport(report)
+          content: formatReport(report),
+          isReport: true,
+          reportData: report
         }])
       } else {
         setMessages(prev => [...prev, {
           role: 'assistant',
-          content: "Please include a Hedera token ID (e.g. `0.0.731861`) in your message so I can analyze it. Example: **Analyze 0.0.731861**"
+          content: "Please include a Solana token address in your message so I can analyze it. Example: **Analyze DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263**"
         }])
       }
     } catch (err) {
@@ -134,73 +148,92 @@ function App() {
   const clearChat = () => {
     if (confirm('Clear entire chat history?')) {
       setMessages([])
-      localStorage.removeItem('ruguard_chat')
-      localStorage.removeItem('ruguard_session')
+      localStorage.removeItem('antirug_chat')
+      localStorage.removeItem('antirug_session')
       window.location.reload()
     }
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-surface overflow-hidden">
-      <Header lastScan={messages.length > 0 ? "Agent Active" : "Waiting for input..."} />
+    // Exact match: mockup line 156
+    <div className="bg-background text-on-background font-body-md min-h-screen flex flex-col overflow-hidden relative">
       
-      <main className="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 sm:px-6 pt-24 pb-6 overflow-hidden z-10">
+      {/* Dynamic Mascot Background — exact match: mockup line 158-160 */}
+      <div className="absolute top-1/2 left-1/2 w-[120vw] h-[120vw] max-w-[1000px] max-h-[1000px] pointer-events-none z-0 opacity-[0.04] bg-mascot flex items-center justify-center" style={{ transform: 'translate(-50%, -50%)' }}>
+        <img alt="Mascot Background" className="w-full h-full object-contain filter grayscale" src="/logo.png"/>
+      </div>
+
+      <Header 
+        lastScan={messages.length > 0 ? "Agent Active" : "Waiting for input..."} 
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+      />
+      
+      {/* Main Chat Area — exact match: mockup line 194 */}
+      <main className="flex-1 w-full max-w-[1280px] mx-auto mt-20 relative flex flex-col bg-circuit-pattern z-10">
         
-        {/* Chat Area */}
-        <div className="flex-1 overflow-y-auto chat-scrollbar rounded-2xl p-4 glass mb-4 flex flex-col">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center px-4 fade-in">
-              <div className="w-24 h-24 rounded-full bg-[#1A1A1A] flex items-center justify-center mb-6 shadow-lg border border-[#333] overflow-hidden group hover:scale-105 transition-transform duration-300">
-                <img src="/logo.png" alt="RugGuard AI Logo" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl text-black">🛡️</span>'; }} />
+        {activeTab === 'scanner' ? (
+          <div className="flex-1 overflow-y-auto chat-scrollbar flex flex-col items-center">
+            {scanLoading ? (
+              <ScanningAnimation />
+            ) : (
+              <div className="p-8 md:p-12 flex flex-col items-center w-full">
+                <HeroInput onAnalyze={handleDirectScan} loading={scanLoading} />
+                {scanResult && <div className="w-full mt-4"><ResultsDashboard data={scanResult} /></div>}
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">RugGuard AI</h2>
-              <p className="text-slate-400 mb-8 max-w-sm">
-                Hello! I'm your autonomous security agent on Hedera. Enter a token ID or ask anything.
-              </p>
-              <SuggestionChips onSelect={handleSend} />
-            </div>
-          ) : (
-            <div className="flex flex-col flex-1">
-              {messages.map((m, i) => (
-                <ChatMessage key={i} role={m.role} content={m.content} />
-              ))}
-              
-              {loading && (
-                <div className="flex w-full mb-4 justify-start">
-                  <div className="flex-shrink-0 mr-3 mt-1">
-                    <div className="w-8 h-8 rounded-full bg-[#1A1A1A] flex items-center justify-center border border-[#333] overflow-hidden animate-pulse">
-                      <img src="/logo.png" alt="Loading" className="w-full h-full object-cover" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-sm">🛡️</span>'; }} />
-                    </div>
+            )}
+          </div>
+        ) : (
+          <>
+            {/* Chat History Container — exact match: mockup line 196 */}
+            <div className="flex-1 overflow-y-auto p-8 md:p-12 flex flex-col gap-10 pb-40">
+              {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center px-4">
+                  <div className="w-24 h-24 rounded-full border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-surface-container relative mb-6 group hover:scale-105 transition-transform duration-300">
+                    <div className="absolute inset-0 bg-primary-container opacity-20 animate-pulse"></div>
+                    <img src="/logo.png" alt="AntiRug AI Logo" className="w-full h-full object-cover relative z-10" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-4xl relative z-10">🛡️</span>'; }} />
                   </div>
-                  <div className="px-5 py-4 rounded-2xl bg-[#111111] border border-card-border rounded-tl-sm w-24">
-                    <div className="flex space-x-1.5 justify-center items-center h-full">
-                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <div className="w-2 h-2 bg-slate-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <h2 className="font-headline-lg text-headline-lg text-on-surface mb-2">AntiRug AI</h2>
+                  <p className="text-on-surface-variant font-body-lg text-body-lg mb-8 max-w-sm">
+                    Agent RUG online. I'm scanning the mempool for shady contracts. Got a target address for me to investigate?
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col flex-1 gap-10">
+                  {messages.map((m, i) => (
+                    <ChatMessage key={i} role={m.role} content={m.content} isReport={m.isReport} reportData={m.reportData} />
+                  ))}
+                  
+                  {loading && (
+                    // Typing indicator — exact match: mockup lines 271-280
+                    <div className="flex items-end gap-4 self-start mt-2">
+                      <div className="w-10 h-10 flex-shrink-0 rounded-full border-2 border-black overflow-hidden shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] bg-surface-container">
+                        <img alt="Detective Mascot Avatar" className="w-full h-full object-cover grayscale opacity-80" src="/logo.png" onError={(e) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.parentNode.innerHTML = '<span class="text-sm">🛡️</span>'; }}/>
+                      </div>
+                      <div className="bg-surface border-2 border-black rounded-xl rounded-bl-none px-6 py-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+                        <div className="w-2.5 h-2.5 bg-primary-container rounded-full typing-dot shadow-[0_0_5px_rgba(0,255,136,0.5)]"></div>
+                        <div className="w-2.5 h-2.5 bg-primary-container rounded-full typing-dot shadow-[0_0_5px_rgba(0,255,136,0.5)]"></div>
+                        <div className="w-2.5 h-2.5 bg-primary-container rounded-full typing-dot shadow-[0_0_5px_rgba(0,255,136,0.5)]"></div>
+                      </div>
                     </div>
-                  </div>
+                  )}
+                  <div ref={messagesEndRef} className="h-4" />
                 </div>
               )}
-              <div ref={messagesEndRef} className="h-4" />
             </div>
-          )}
-        </div>
 
-        {/* Input Area */}
-        <div className="shrink-0 relative">
-          {messages.length > 0 && (
-            <button 
-              onClick={clearChat}
-              className="absolute -top-8 right-2 text-xs text-slate-500 hover:text-white transition-colors"
-            >
-              Clear Chat
-            </button>
-          )}
-          <ChatInput onSend={handleSend} loading={loading} />
-          <p className="text-center text-[10px] text-slate-500 mt-2">
-            RugGuard AI can make mistakes. Verify critical security decisions.
-          </p>
-        </div>
+            {/* Input Area — ChatInput is absolutely positioned */}
+            {messages.length > 0 && (
+              <button 
+                onClick={clearChat}
+                className="fixed bottom-36 right-8 z-30 text-xs text-on-surface-variant hover:text-on-surface transition-colors bg-surface-container border border-black rounded-md px-2 py-1 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              >
+                Clear Chat
+              </button>
+            )}
+            <ChatInput onSend={handleSend} loading={loading} />
+          </>
+        )}
       </main>
     </div>
   )

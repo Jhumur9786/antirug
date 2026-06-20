@@ -41,13 +41,13 @@ function withTimeout(promise, ms) {
 }
 
 /**
- * Send a prompt to GPT-4o-mini for crypto sentiment analysis.
- * Includes a 5-second timeout to protect the pipeline.
+ * Send a prompt to an LLM. Defaults to gpt-4o-mini.
  *
  * @param {string} prompt - The analysis prompt
+ * @param {Object} options - Custom generation parameters
  * @returns {string} The LLM response text, or a fallback message on failure
  */
-async function askLLM(prompt) {
+async function askLLM(prompt, options = {}) {
   try {
     const client = getClient();
     if (!client) {
@@ -55,30 +55,36 @@ async function askLLM(prompt) {
       return "AI sentiment analysis unavailable";
     }
 
-    const response = await withTimeout(
-      client.chat.completions.create({
-        model: "gpt-4o-mini",
+    const payload = {
+        model: options.model || process.env.OPENAI_MODEL || "gpt-4o-mini",
         messages: [
           {
             role: "system",
-            content:
-              "You are a crypto market sentiment analyst specializing in rug pull detection."
+            content: options.system || "You are a crypto market sentiment analyst specializing in rug pull detection."
           },
           {
             role: "user",
             content: prompt
           }
         ],
-        temperature: 0.2,
-        max_tokens: 500
-      }),
-      15000 // 15-second timeout
+        temperature: options.temperature !== undefined ? options.temperature : 0.2,
+        max_tokens: options.max_tokens || 500
+    };
+
+    if (options.response_format) {
+        payload.response_format = options.response_format;
+    }
+
+    const response = await withTimeout(
+      client.chat.completions.create(payload),
+      options.timeout || 15000 // 15-second default timeout
     );
 
     return response.choices[0].message.content;
   } catch (error) {
     console.warn(`[LLM WARNING] ${error.message}`);
-    return "AI sentiment analysis unavailable";
+    if (options.throwOnError) throw error; // Allow catching in multi-agent loops
+    return "AI analysis unavailable";
   }
 }
 

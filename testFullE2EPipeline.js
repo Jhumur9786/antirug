@@ -28,7 +28,7 @@ const AlertAgent = require("./AlertAgent");
 const TOKEN_ID = process.argv[2];
 
 if (!TOKEN_ID || !/^0\.0\.\d+$/.test(TOKEN_ID)) {
-    console.log("\n  RugGuard — Full End-to-End Pipeline Test\n");
+    console.log("\n  AntiRug — Full End-to-End Pipeline Test\n");
     console.log("  Usage:   node testFullE2EPipeline.js <token_id>");
     console.log("  Example: node testFullE2EPipeline.js 0.0.731861\n");
     process.exit(1);

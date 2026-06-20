@@ -1,0 +1,86 @@
+{
+  "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263": [
+    {
+      "timestamp": 1781857912926,
+      "liquidity_usd": 625939.58
+    },
+    {
+      "timestamp": 1781908098504,
+      "liquidity_usd": 41626249.82
+    },
+    {
+      "timestamp": 1781908489616,
+      "liquidity_usd": 41626249.82
+    },
+    {
+      "timestamp": 1781908816297,
+      "liquidity_usd": 41626249.82
+    },
+    {
+      "timestamp": 1781910788083,
+      "liquidity_usd": 41626249.82
+    }
+  ],
+  "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R": [
+    {
+      "timestamp": 1781908148431,
+      "liquidity_usd": 1158132.04
+    },
+    {
+      "timestamp": 1781908439701,
+      "liquidity_usd": 1157370
+    },
+    {
+      "timestamp": 1781908475915,
+      "liquidity_usd": 1157370
+    },
+    {
+      "timestamp": 1781910696982,
+      "liquidity_usd": 1158962.03
+    }
+  ],
+  "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN": [
+    {
+      "timestamp": 1781908328402,
+      "liquidity_usd": 59281634.6
+    },
+    {
+      "timestamp": 1781908462230,
+      "liquidity_usd": 59281634.6
+    },
+    {
+      "timestamp": 1781908516474,
+      "liquidity_usd": 59281634.6
+    },
+    {
+      "timestamp": 1781908660583,
+      "liquidity_usd": 59281634.6
+    },
+    {
+      "timestamp": 1781909112902,
+      "liquidity_usd": 59466899
+    },
+    {
+      "timestamp": 1781910647614,
+      "liquidity_usd": 59736886.98
+    },
+    {
+      "timestamp": 1781910802410,
+      "liquidity_usd": 59736886.98
+    },
+    {
+      "timestamp": 1781910993026,
+      "liquidity_usd": 59732615
+    }
+  ],
+  "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm": [
+    {
+      "timestamp": 1781908370316,
+      "liquidity_usd": 165590.88
+    },
+    {
+      "timestamp": 1781910665914,
+      "liquidity_usd": 166647.54
+    }
+  ]
+}

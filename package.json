@@ -1,7 +1,7 @@
 {
-  "name": "ruguard",
+  "name": "antirug",
   "version": "1.0.0",
-  "description": "RugGuard AI Multi-Agent Security Pipeline — Hedera token rug-pull risk analysis",
+  "description": "AntiRug AI Multi-Agent Security Pipeline — Solana token rug-pull risk analysis",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -9,12 +9,7 @@
     "build": "npx esbuild eliza-runtime.ts --bundle --platform=node --format=esm --packages=external --outfile=dist/eliza-runtime.mjs --banner:js=\"import{createRequire as __cr}from'module';const require=__cr(import.meta.url);\""
   },
   "dependencies": {
-    "@elizaos/adapter-sqlite": "^0.25.6-alpha.1",
-    "@elizaos/client-telegram": "^0.1.9",
-    "@elizaos/core": "^1.7.2",
-    "@elizaos/plugin-bootstrap": "^1.7.2",
-    "@elizaos/plugin-sql": "^1.7.2",
-    "@hashgraphonline/standards-sdk": "^0.1.168",
+    "@elizaos/core": "file:./eliza/packages/core",
     "@langchain/core": "^0.3.40",
     "@types/express": "^5.0.6",
     "@types/node": "^25.5.0",
@@ -24,7 +19,6 @@
     "express": "^4.21.2",
     "mock-require": "^3.0.3",
     "openai": "^6.29.0",
-    "sentiment": "^5.0.2",
     "sharp": "^0.34.5",
     "ts-node": "^10.9.2",
     "esbuild": "^0.27.4"

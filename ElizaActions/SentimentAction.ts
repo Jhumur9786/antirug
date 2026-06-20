@@ -10,7 +10,7 @@ export const sentimentAction: Action = {
     validate: async (runtime: IAgentRuntime, message: Memory) => true,
     handler: async (runtime: IAgentRuntime, message: Memory, state?: State, options?: any, callback?: HandlerCallback): Promise<any> => {
         const text = message.content?.text || "";
-        const match = text.match(/0\.0\.\d+/);
+        const match = text.match(/[1-9A-HJ-NP-Za-km-z]{32,44}/);
         const tokenId = match ? match[0] : null;
 
         let symbolMatch = "UNKNOWN";
@@ -28,7 +28,7 @@ export const sentimentAction: Action = {
             await Promise.all([
                 sentAgent.fetchCoinGeckoData(symbolMatch),
                 sentAgent.fetchDexData(symbolMatch),
-                sentAgent.fetchGitHubData("https://github.com/hasgraph/hedera-services")
+                sentAgent.fetchGitHubData("https://github.com/solana-labs/solana")
             ]);
             
             const scannerMock = (tokenId && ToolDataCache[tokenId]?.scanner) ? ToolDataCache[tokenId].scanner : { token_id: tokenId, name: symbolMatch, symbol: symbolMatch };

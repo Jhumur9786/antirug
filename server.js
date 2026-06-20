@@ -36,6 +36,17 @@ const ConversationalAgent = require("./ConversationalAgent");
 const ConversationManager = require("./ConversationManager");
 const ExpertConsensusAgent = require("./ExpertConsensusAgent");
 
+// ── New Solana Modules ───────────────────────────────────────────
+const AuthorityRiskEngine = require("./AuthorityRiskEngine");
+const LPLockAnalyzer = require("./LPLockAnalyzer");
+const BundlerDetector = require("./BundlerDetector");
+const InsiderWalletScorer = require("./InsiderWalletScorer");
+const SniperDominanceScorer = require("./SniperDominanceScorer");
+const SmartMoneyTracker = require("./SmartMoneyTracker");
+const WalletRelationshipGraph = require("./WalletRelationshipGraph");
+const LiquidityShockAgent = require("./LiquidityShockAgent");
+const VolumeManipulationDetector = require("./VolumeManipulationDetector");
+
 // ── Conversational Layer (OpenConvAI + GPT-4) ────────────────────
 const conversationalAgent = new ConversationalAgent();
 const conversationManager = new ConversationManager();
@@ -44,8 +55,8 @@ const conversationManager = new ConversationManager();
 let globalElizaRuntime = null;
 (async () => {
     try {
-        const { RugGuardElizaRuntime } = await import("./dist/eliza-runtime.mjs");
-        globalElizaRuntime = new RugGuardElizaRuntime();
+        const { AntiRugElizaRuntime } = await import("./dist/eliza-runtime.mjs");
+        globalElizaRuntime = new AntiRugElizaRuntime();
         console.log("🟢 ElizaOS Autonomous Runtime ACTIVE — Proactive Monitor Started!");
     } catch (e) {
         console.warn("🟡 ElizaOS Runtime not compiled yet. Falling back to legacy pipeline.", e.message);
@@ -114,9 +125,9 @@ app.use(express.json());
 // ── Serve Frontend ────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, "frontend/dist")));
 
-// ── Helper: Validate Hedera Token ID ──────────────────────────────
+// ── Helper: Validate Solana Token Address ─────────────────────────
 function isValidTokenId(tokenId) {
-    return /^0\.0\.\d+$/.test(tokenId);
+    return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(tokenId);
 }
 
 // ── Helper: Run Python Scanner via spawn ──────────────────────────
@@ -200,7 +211,7 @@ function buildFallbackSentiment(tokenId) {
 async function runPipeline(tokenId, onStep = null) {
     const startTime = Date.now();
     const pipelineLog = [];
-    const TOTAL_STEPS = 6;
+    const TOTAL_STEPS = 13;
 
     const log = (step, status) => {
         pipelineLog.push({ step, status, elapsed_ms: Date.now() - startTime });
@@ -216,7 +227,7 @@ async function runPipeline(tokenId, onStep = null) {
     // 1. Token Scanner (Python)
     let scanner;
     try {
-        emit("step_start", { step: "TokenScannerAgent", index: 1, total: TOTAL_STEPS, detail: "Fetching token metadata from Hedera Mirror Node..." });
+        emit("step_start", { step: "TokenScannerAgent", index: 1, total: TOTAL_STEPS, detail: "Fetching token metadata from Solana RPC..." });
         scanner = await runTokenScanner(tokenId);
         log("TokenScannerAgent", "OK");
         emit("step_complete", { step: "TokenScannerAgent", index: 1, total: TOTAL_STEPS, status: "OK", preview: `Found: ${scanner.name || "Unknown"} (${scanner.symbol || "?"})` });
@@ -240,10 +251,136 @@ async function runPipeline(tokenId, onStep = null) {
         throw new Error(`BlockchainRiskAnalysisAgent failed: ${err.message}`);
     }
 
+    // 2a. Authority Risk Engine
+    let authority;
+    try {
+        emit("step_start", { step: "AuthorityRiskEngine", index: 3, total: TOTAL_STEPS, detail: "Checking mint, freeze, and update authorities..." });
+        const authorityAgent = new AuthorityRiskEngine();
+        authority = authorityAgent.analyze(scanner);
+        log("AuthorityRiskEngine", "OK");
+        emit("step_complete", { step: "AuthorityRiskEngine", index: 3, total: TOTAL_STEPS, status: "OK", preview: `Score: ${authority.authority_risk_score}` });
+    } catch (err) {
+        log("AuthorityRiskEngine", `FAILED: ${err.message}`);
+        emit("step_error", { step: "AuthorityRiskEngine", index: 3, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        authority = null;
+    }
+
+    // 2b. LP Lock Analyzer
+    let lpLock;
+    try {
+        emit("step_start", { step: "LPLockAnalyzer", index: 4, total: TOTAL_STEPS, detail: "Verifying LP lock and burn status..." });
+        const lpAgent = new LPLockAnalyzer();
+        lpLock = lpAgent.analyze(scanner);
+        log("LPLockAnalyzer", "OK");
+        emit("step_complete", { step: "LPLockAnalyzer", index: 4, total: TOTAL_STEPS, status: "OK", preview: `Status: ${lpLock.lp_lock_status}` });
+    } catch (err) {
+        log("LPLockAnalyzer", `FAILED: ${err.message}`);
+        emit("step_error", { step: "LPLockAnalyzer", index: 4, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        lpLock = null;
+    }
+
+    // 2c. Bundler Detector
+    let bundler;
+    try {
+        emit("step_start", { step: "BundlerDetector", index: 5, total: TOTAL_STEPS, detail: "Scanning for coordinated launch bundles..." });
+        const bundlerAgent = new BundlerDetector();
+        bundler = bundlerAgent.analyze(scanner);
+        log("BundlerDetector", "OK");
+        emit("step_complete", { step: "BundlerDetector", index: 5, total: TOTAL_STEPS, status: "OK", preview: `Score: ${bundler.bundler_risk_score}` });
+    } catch (err) {
+        log("BundlerDetector", `FAILED: ${err.message}`);
+        emit("step_error", { step: "BundlerDetector", index: 5, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        bundler = null;
+    }
+
+    // 2d. Insider Wallet Scorer
+    let insider;
+    try {
+        emit("step_start", { step: "InsiderWalletScorer", index: 6, total: TOTAL_STEPS, detail: "Tracking creator wallet exit status..." });
+        const insiderAgent = new InsiderWalletScorer();
+        insider = insiderAgent.analyze(scanner);
+        log("InsiderWalletScorer", "OK");
+        emit("step_complete", { step: "InsiderWalletScorer", index: 6, total: TOTAL_STEPS, status: "OK", preview: `Status: ${insider.creator_status}` });
+    } catch (err) {
+        log("InsiderWalletScorer", `FAILED: ${err.message}`);
+        emit("step_error", { step: "InsiderWalletScorer", index: 6, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        insider = null;
+    }
+
+    // 2e. Sniper Dominance Scorer
+    let sniper;
+    try {
+        emit("step_start", { step: "SniperDominanceScorer", index: 7, total: TOTAL_STEPS, detail: "Analyzing early supply capture..." });
+        const sniperAgent = new SniperDominanceScorer();
+        sniper = sniperAgent.analyze(scanner);
+        log("SniperDominanceScorer", "OK");
+        emit("step_complete", { step: "SniperDominanceScorer", index: 7, total: TOTAL_STEPS, status: "OK", preview: `Score: ${sniper.sniper_risk_score}` });
+    } catch (err) {
+        log("SniperDominanceScorer", `FAILED: ${err.message}`);
+        emit("step_error", { step: "SniperDominanceScorer", index: 7, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        sniper = null;
+    }
+
+    // 2f. Smart Money Tracker
+    let smartMoney;
+    try {
+        emit("step_start", { step: "SmartMoneyTracker", index: 8, total: TOTAL_STEPS, detail: "Tracking known profitable wallets..." });
+        const smartAgent = new SmartMoneyTracker();
+        smartMoney = smartAgent.analyze(scanner);
+        log("SmartMoneyTracker", "OK");
+        emit("step_complete", { step: "SmartMoneyTracker", index: 8, total: TOTAL_STEPS, status: "OK", preview: `Score: ${smartMoney.smart_money_score}` });
+    } catch (err) {
+        log("SmartMoneyTracker", `FAILED: ${err.message}`);
+        emit("step_error", { step: "SmartMoneyTracker", index: 8, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        smartMoney = null;
+    }
+
+    // 2g. Wallet Relationship Graph
+    let walletGraph;
+    try {
+        emit("step_start", { step: "WalletRelationshipGraph", index: 9, total: TOTAL_STEPS, detail: "Building fund-flow relationship graph..." });
+        const graphAgent = new WalletRelationshipGraph();
+        walletGraph = graphAgent.analyze(scanner);
+        log("WalletRelationshipGraph", "OK");
+        emit("step_complete", { step: "WalletRelationshipGraph", index: 9, total: TOTAL_STEPS, status: "OK", preview: `Clusters: ${walletGraph.cluster_count}` });
+    } catch (err) {
+        log("WalletRelationshipGraph", `FAILED: ${err.message}`);
+        emit("step_error", { step: "WalletRelationshipGraph", index: 9, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        walletGraph = null;
+    }
+
+    // 2h. Liquidity Shock Agent
+    let liquidityShock;
+    try {
+        emit("step_start", { step: "LiquidityShockAgent", index: 10, total: TOTAL_STEPS, detail: "Modeling liquidity shocks..." });
+        const liqAgent = new LiquidityShockAgent();
+        liquidityShock = liqAgent.analyze(scanner);
+        log("LiquidityShockAgent", "OK");
+        emit("step_complete", { step: "LiquidityShockAgent", index: 10, total: TOTAL_STEPS, status: "OK", preview: `Score: ${liquidityShock.liquidity_shock_score}` });
+    } catch (err) {
+        log("LiquidityShockAgent", `FAILED: ${err.message}`);
+        emit("step_error", { step: "LiquidityShockAgent", index: 10, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        liquidityShock = null;
+    }
+
+    // 2i. Volume Manipulation Detector
+    let volumeManipulation;
+    try {
+        emit("step_start", { step: "VolumeManipulationDetector", index: 11, total: TOTAL_STEPS, detail: "Detecting wash trading patterns..." });
+        const volAgent = new VolumeManipulationDetector();
+        volumeManipulation = volAgent.analyze(scanner);
+        log("VolumeManipulationDetector", "OK");
+        emit("step_complete", { step: "VolumeManipulationDetector", index: 11, total: TOTAL_STEPS, status: "OK", preview: `Score: ${volumeManipulation.volume_manipulation_score}` });
+    } catch (err) {
+        log("VolumeManipulationDetector", `FAILED: ${err.message}`);
+        emit("step_error", { step: "VolumeManipulationDetector", index: 11, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        volumeManipulation = null;
+    }
+
     // 3. Sentiment Analysis (async, with fallback)
     let sentiment;
     try {
-        emit("step_start", { step: "SentimentAnalysisAgent", index: 3, total: TOTAL_STEPS, detail: "Analyzing market sentiment, DEX data, developer activity..." });
+        emit("step_start", { step: "SentimentAnalysisAgent", index: 12, total: TOTAL_STEPS, detail: "Analyzing market sentiment, DEX data, developer activity..." });
         const sentimentAgent = new SentimentAnalysisAgent();
         sentiment = await sentimentAgent.analyzeSentiment({
             token_id: tokenId,
@@ -251,29 +388,38 @@ async function runPipeline(tokenId, onStep = null) {
             symbol: scanner.symbol || "UNKNOWN",
         });
         log("SentimentAnalysisAgent", "OK");
-        emit("step_complete", { step: "SentimentAnalysisAgent", index: 3, total: TOTAL_STEPS, status: "OK", preview: `Rating: ${sentiment.sentiment_security_rating || "N/A"}, Intelligence Score: ${sentiment.community_intelligence_score ?? "N/A"}/100` });
+        emit("step_complete", { step: "SentimentAnalysisAgent", index: 12, total: TOTAL_STEPS, status: "OK", preview: `Rating: ${sentiment.sentiment_security_rating || "N/A"}, Intelligence Score: ${sentiment.community_intelligence_score ?? "N/A"}/100` });
     } catch (err) {
         console.warn(`[Pipeline] SentimentAgent failed, using fallback: ${err.message}`);
         sentiment = buildFallbackSentiment(tokenId);
         log("SentimentAnalysisAgent", `FALLBACK: ${err.message}`);
-        emit("step_complete", { step: "SentimentAnalysisAgent", index: 3, total: TOTAL_STEPS, status: "FALLBACK", preview: "Using fallback sentiment data" });
+        emit("step_complete", { step: "SentimentAnalysisAgent", index: 12, total: TOTAL_STEPS, status: "FALLBACK", preview: "Using fallback sentiment data" });
     }
 
     // 4. Risk Scoring
     let riskScore;
     try {
-        emit("step_start", { step: "RiskScoringAgent", index: 4, total: TOTAL_STEPS, detail: "Calculating composite risk score with AI reasoning..." });
+        emit("step_start", { step: "RiskScoringAgent", index: 13, total: TOTAL_STEPS, detail: "Calculating composite risk score with AI reasoning..." });
         const scoringAgent = new RiskScoringAgent();
         riskScore = await scoringAgent.calculateRisk({
             scanner,
             blockchain: blockchainRisk,
             sentiment,
+            authority,
+            lpLock,
+            bundler,
+            insider,
+            sniper,
+            smartMoney,
+            walletGraph,
+            liquidityShock,
+            volumeManipulation
         });
         log("RiskScoringAgent", "OK");
-        emit("step_complete", { step: "RiskScoringAgent", index: 4, total: TOTAL_STEPS, status: "OK", preview: `Risk: ${riskScore.rug_risk_score ?? "N/A"}/100 (${riskScore.risk_level || "N/A"})` });
+        emit("step_complete", { step: "RiskScoringAgent", index: 13, total: TOTAL_STEPS, status: "OK", preview: `Risk: ${riskScore.rug_risk_score ?? "N/A"}/100 (${riskScore.risk_level || "N/A"})` });
     } catch (err) {
         log("RiskScoringAgent", `FAILED: ${err.message}`);
-        emit("step_error", { step: "RiskScoringAgent", index: 4, total: TOTAL_STEPS, status: "FAILED", error: err.message });
+        emit("step_error", { step: "RiskScoringAgent", index: 13, total: TOTAL_STEPS, status: "FAILED", error: err.message });
         throw new Error(`RiskScoringAgent failed: ${err.message}`);
     }
 
@@ -380,7 +526,7 @@ async function runDeepSearch(tokenId, onStep = null) {
 // ── Health Check (API) ────────────────────────────────────────────
 app.get("/api/health", (_req, res) => {
     res.json({
-        status: "RugGuard AI running",
+        status: "AntiRug AI running",
         version: "2.0.0",
         endpoints: {
             dashboard: "GET /",
@@ -400,7 +546,7 @@ app.get("/analyze/deep/:tokenId", async (req, res) => {
 
     if (!isValidTokenId(tokenId)) {
         return res.status(400).json({
-            error: "Invalid token ID format. Expected format: 0.0.XXXXXXX",
+            error: "Invalid token address. Expected Solana token address (base58, e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263)",
         });
     }
 
@@ -426,7 +572,7 @@ app.get("/analyze/:tokenId", async (req, res) => {
 
     if (!isValidTokenId(tokenId)) {
         return res.status(400).json({
-            error: "Invalid token ID format. Expected format: 0.0.XXXXXXX",
+            error: "Invalid token address. Expected Solana token address (base58, e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263)",
         });
     }
 
@@ -452,13 +598,13 @@ app.post("/analyze", async (req, res) => {
 
     if (!token_id) {
         return res.status(400).json({
-            error: "Missing token_id in request body. Expected: { \"token_id\": \"0.0.XXXXXXX\" }",
+            error: "Missing token_id in request body. Expected: { \"token_id\": \"<solana_address>\" }",
         });
     }
 
     if (!isValidTokenId(token_id)) {
         return res.status(400).json({
-            error: "Invalid token ID format. Expected format: 0.0.XXXXXXX",
+            error: "Invalid token address. Expected Solana token address (base58, e.g. DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263)",
         });
     }
 
@@ -739,10 +885,10 @@ app.use((err, _req, res, _next) => {
 // ── Start ─────────────────────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`\n═══════════════════════════════════════════════════`);
-    console.log(`  RugGuard AI Security Pipeline — LIVE`);
+    console.log(`  AntiRug AI Security Pipeline — LIVE`);
     console.log(`  Port: ${PORT}`);
     console.log(`  Dashboard: http://localhost:${PORT}/`);
     console.log(`  Health:    http://localhost:${PORT}/api/health`);
-    console.log(`  Analyze:   http://localhost:${PORT}/analyze/0.0.2283230`);
+    console.log(`  Analyze:   http://localhost:${PORT}/analyze/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263`);
     console.log(`═══════════════════════════════════════════════════\n`);
 });

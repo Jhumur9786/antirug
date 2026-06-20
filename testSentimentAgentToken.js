@@ -6,7 +6,7 @@ const scannerData = {
   token_id: "0.0.2283230",
   name: "Karate Combat",
   symbol: "KARATE",
-  network: "hedera"
+  network: "solana"
 };
 
 async function runTest() {

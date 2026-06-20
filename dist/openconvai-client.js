@@ -1,40 +1,14 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.OpenConvAIClient = void 0;
 class OpenConvAIClient {
-    static instance;
-    runtime;
-    hcsClient;
-    inboundTopicId = null;
-    globalSirenTopicId = null;
-    // Micro-monetization: minimum HBAR fee for analysis requests
-    ANALYSIS_FEE_HBAR = 1;
-    // Track processed requests to avoid duplicates
-    processedRequests = new Set();
     constructor(runtime) {
+        this.inboundTopicId = null;
+        this.globalSirenTopicId = null;
+        // Micro-monetization: minimum HBAR fee for analysis requests
+        this.ANALYSIS_FEE_HBAR = 1;
+        // Track processed requests to avoid duplicates
+        this.processedRequests = new Set();
         this.runtime = runtime;
         OpenConvAIClient.instance = this;
     }
@@ -45,7 +19,7 @@ class OpenConvAIClient {
             return;
         }
         try {
-            const sdk = await Promise.resolve().then(() => __importStar(require("@hashgraphonline/standards-sdk")));
+            const sdk = await import("@hashgraphonline/standards-sdk");
             const { HCS10Client } = sdk;
             const { InboundTopicType } = sdk;
             this.hcsClient = new HCS10Client({
@@ -279,7 +253,7 @@ class OpenConvAIClient {
         this.runtime.logger.warn(`[OpenConvAI] 🚨 BROADCASTING DECENTRALIZED GLOBAL ALERT FOR ${tokenId}!`);
         try {
             // Bypass standards-sdk sendMessage — use raw Hedera SDK directly
-            const { TopicMessageSubmitTransaction, Client, PrivateKey } = await Promise.resolve().then(() => __importStar(require("@hashgraph/sdk")));
+            const { TopicMessageSubmitTransaction, Client, PrivateKey } = await import("@hashgraph/sdk");
             const client = Client.forTestnet();
             // Try multiple key formats: ECDSA (0x-prefixed), ED25519, DER, then generic
             let privateKey;

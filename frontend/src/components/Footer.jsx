@@ -6,13 +6,13 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <span className="text-lg">🛡️</span>
             <span className="text-sm text-slate-400">
-              <span className="font-semibold text-white">RugGuard</span> — Level 5 Autonomous Agent on Hedera
+              <span className="font-semibold text-white">AntiRug</span> — Level 5 Autonomous Agent on Hedera
             </span>
           </div>
 
           <div className="flex items-center gap-6">
             <a
-              href="https://github.com/gulbadanjhumur397-web/ruguard"
+              href="https://github.com/gulbadanjhumur397-web/antirug"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-slate-500 hover:text-white transition-colors flex items-center gap-1.5"
@@ -21,7 +21,7 @@ export default function Footer() {
               GitHub
             </a>
             <a
-              href="https://ruguard-production.up.railway.app"
+              href="https://antirug-production.up.railway.app"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-slate-500 hover:text-white transition-colors"
@@ -29,7 +29,7 @@ export default function Footer() {
               🚂 Railway
             </a>
             <a
-              href="https://t.me/RugGuardBot"
+              href="https://t.me/AntiRugBot"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-slate-500 hover:text-white transition-colors"

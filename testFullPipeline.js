@@ -7,7 +7,7 @@ async function runPipeline() {
     const tokenId = process.argv[2] || "0.0.2283230"; // Default to Karate if not provided
     const tokenNameHint = process.argv[3] || "Unknown Token";
 
-    console.log("Starting RugGuard Pipeline Validation for:", tokenId);
+    console.log("Starting AntiRug Pipeline Validation for:", tokenId);
 
     try {
         // 1. TokenScannerAgent (Python)
@@ -24,7 +24,7 @@ async function runPipeline() {
         console.log(JSON.stringify(scannerResult, null, 2));
 
         if (scannerResult.error) {
-            throw { agent: "TokenScannerAgent", source: "Hedera Mirror Node", cause: scannerResult.error, fix: "Verify Token ID exists on Hedera Mainnet." };
+            throw { agent: "TokenScannerAgent", source: "Solana RPC", cause: scannerResult.error, fix: "Verify Token Address exists on Solana Mainnet." };
         }
 
         // 2. BlockchainRiskAnalysisAgent (Node.js)
@@ -87,7 +87,7 @@ async function runPipeline() {
         checks.push({ name: "No invalid percentages", pass: scannerResult.top_holder_percentage >= 0 && scannerResult.top_holder_percentage <= 100 });
         checks.push({ name: "Holder count realistic", pass: scannerResult.holder_count >= 0 });
         checks.push({ name: "Treasury balance correct", pass: typeof scannerResult.treasury_balance === 'number' });
-        checks.push({ name: "Token age realistic", pass: scannerResult.token_age_days < 3000 }); // Hedera is ~5 years old
+        checks.push({ name: "Token age realistic", pass: scannerResult.token_age_days < 3000 }); // Solana is ~5 years old
 
         // Sentiment Validation
         checks.push({ name: "No default bullish values", pass: sentiment.posts_analyzed > 0 });
@@ -123,7 +123,7 @@ async function runPipeline() {
         console.log(JSON.stringify(requestedReport, null, 2));
 
         if (valid) {
-            console.log("\nGOAL: RugGuard pipeline works end-to-end like a real security product.");
+            console.log("\nGOAL: AntiRug pipeline works end-to-end like a real security product.");
         } else {
             console.log("\nWARNING: Pipeline completed but some validation checks failed.");
         }

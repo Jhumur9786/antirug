@@ -13,7 +13,7 @@ export default function RiskOverview({ data }) {
   const offset = circumference - (score / 100) * circumference
 
   return (
-    <div className="glass rounded-2xl p-6">
+    <div className="bg-surface-container border-4 border-black rounded-xl p-6 cel-shadow">
       <h3 className="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-5 flex items-center gap-2">
         <span>🎯</span> Risk Overview
       </h3>

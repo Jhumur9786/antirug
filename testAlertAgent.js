@@ -35,7 +35,7 @@ const highRiskResult = agent.generateAlert({
         key_triggers: ["Active mint authority", "Treasury concentration", "Admin control vulnerability"],
         risk_tags: ["CENTRALIZATION_RISK", "ADMIN_CONTROL"],
         risk_simulation: [],
-        model_version: "RugGuard AI v2"
+        model_version: "AntiRug AI v2"
     }
 });
 
@@ -68,7 +68,7 @@ const lowRiskResult = agent.generateAlert({
         key_triggers: [],
         risk_tags: ["HEALTHY_SENTIMENT", "MATURE_TOKEN"],
         risk_simulation: [],
-        model_version: "RugGuard AI v2"
+        model_version: "AntiRug AI v2"
     }
 });
 
@@ -101,7 +101,7 @@ const criticalResult = agent.generateAlert({
         key_triggers: ["Treasury concentration", "Low liquidity depth", "Active mint authority"],
         risk_tags: ["CENTRALIZATION_RISK", "LOW_LIQUIDITY", "LOW_ACTIVITY"],
         risk_simulation: [],
-        model_version: "RugGuard AI v2"
+        model_version: "AntiRug AI v2"
     }
 });
 
@@ -147,7 +147,7 @@ tests.forEach(t => {
         const triggerOk  = t.result.alert_triggered === t.expectTriggered;
         const typeOk     = t.result.alert_type === t.expectType;
         const recsOk     = Array.isArray(t.result.recommendations) && t.result.recommendations.length > 0;
-        const agentOk    = t.result.agent === "RugGuard AlertAgent v1";
+        const agentOk    = t.result.agent === "AntiRug AlertAgent v1";
         const allOk      = levelOk && triggerOk && typeOk && recsOk && agentOk;
         console.log(`  ${allOk ? "✅" : "❌"} ${t.name}: level=${t.result.alert_level} triggered=${t.result.alert_triggered} type=${t.result.alert_type} recs=${t.result.recommendations.length} score=${t.result.alert_score}`);
         if (allOk) passed++;
