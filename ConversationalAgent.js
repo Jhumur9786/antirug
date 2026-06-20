@@ -17,6 +17,7 @@
 
 require("dotenv").config();
 const OpenAI = require("openai");
+const { createLLMClient, resolveLLMModel } = require("./llmConfig");
 
 // ── System Prompt ─────────────────────────────────────────────────
 const SYSTEM_PROMPT = `
@@ -56,10 +57,7 @@ Current date: ${new Date().toISOString().split('T')[0]}
 
 class ConversationalAgent {
     constructor() {
-        const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
-        const config = apiKey ? { apiKey } : null;
-        if (config && process.env.OPENAI_BASE_URL) config.baseURL = process.env.OPENAI_BASE_URL;
-        this.openai = config ? new OpenAI(config) : null;
+        this.openai = createLLMClient(OpenAI);
     }
 
     // ── Token Address Extraction ──────────────────────────────────
@@ -322,13 +320,13 @@ Consensus Confidence: ${report.expert_consensus.confidence_rating}%` : "Deep Sea
         // Attempt GPT-4 call
         try {
             if (!this.openai) {
-                console.warn("[ConversationalAgent] OPENAI_API_KEY not configured");
+                console.warn("[ConversationalAgent] No LLM API key configured");
                 return this._fallbackResponse(userMessage);
             }
 
             const response = await this._withTimeout(
                 this.openai.chat.completions.create({
-                    model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                    model: resolveLLMModel("small"),
                     messages,
                     temperature: 0.3,
                     max_tokens: 1000,

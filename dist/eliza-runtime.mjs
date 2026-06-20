@@ -1,9 +1,76 @@
 import{createRequire as __cr}from'module';const require=__cr(import.meta.url);
+var __getOwnPropNames = Object.getOwnPropertyNames;
 var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, {
   get: (a, b) => (typeof require !== "undefined" ? require : a)[b]
 }) : x)(function(x) {
   if (typeof require !== "undefined") return require.apply(this, arguments);
   throw Error('Dynamic require of "' + x + '" is not supported');
+});
+var __commonJS = (cb, mod) => function __require2() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+
+// llmConfig.js
+var require_llmConfig = __commonJS({
+  "llmConfig.js"(exports, module) {
+    "use strict";
+    var GROQ_BASE_URL = "https://api.groq.com/openai/v1";
+    var GROQ_DEFAULT_MODEL = "openai/gpt-oss-120b";
+    var OPENAI_SMALL_MODEL = "gpt-4o-mini";
+    var OPENAI_LARGE_MODEL = "gpt-4o";
+    function hasGroqKey() {
+      return Boolean(process.env.GROQ_API_KEY);
+    }
+    function getLLMProvider() {
+      if (hasGroqKey()) return "groq";
+      if (process.env.OPENAI_API_KEY) return "openai";
+      return "none";
+    }
+    function getLLMProviderLabel() {
+      const provider = getLLMProvider();
+      if (provider === "groq") return "Groq";
+      if (provider === "openai") return "OpenAI";
+      return "LLM";
+    }
+    function getLLMApiKey2() {
+      return process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY || "";
+    }
+    function resolveLLMBaseURL() {
+      if (process.env.OPENAI_BASE_URL) return process.env.OPENAI_BASE_URL;
+      if (hasGroqKey()) return process.env.GROQ_BASE_URL || GROQ_BASE_URL;
+      return void 0;
+    }
+    function isOpenAIOnlyModel(model) {
+      return /^(gpt-|o[0-9]|chatgpt-)/i.test(model || "");
+    }
+    function resolveLLMModel2(size = "small") {
+      if (hasGroqKey()) {
+        const groqModel = process.env.GROQ_MODEL || (size === "large" ? process.env.GROQ_LARGE_MODEL : process.env.GROQ_SMALL_MODEL);
+        if (groqModel) return groqModel;
+        if (process.env.OPENAI_MODEL && !isOpenAIOnlyModel(process.env.OPENAI_MODEL)) {
+          return process.env.OPENAI_MODEL;
+        }
+        return GROQ_DEFAULT_MODEL;
+      }
+      return process.env.OPENAI_MODEL || (size === "large" ? OPENAI_LARGE_MODEL : OPENAI_SMALL_MODEL);
+    }
+    function createLLMClient2(OpenAI) {
+      const apiKey = getLLMApiKey2();
+      if (!apiKey) return null;
+      const config = { apiKey };
+      const baseURL = resolveLLMBaseURL();
+      if (baseURL) config.baseURL = baseURL;
+      return new OpenAI(config);
+    }
+    module.exports = {
+      createLLMClient: createLLMClient2,
+      getLLMApiKey: getLLMApiKey2,
+      getLLMProvider,
+      getLLMProviderLabel,
+      resolveLLMBaseURL,
+      resolveLLMModel: resolveLLMModel2
+    };
+  }
 });
 
 // eliza-runtime.ts
@@ -243,6 +310,11 @@ var predictRugPullAction = {
 };
 
 // eliza-runtime.ts
+var {
+  createLLMClient,
+  getLLMApiKey,
+  resolveLLMModel
+} = require_llmConfig();
 var characterPath = path6.resolve(process.cwd(), "antirug.character.json");
 var characterJson = JSON.parse(fs.readFileSync(characterPath, "utf-8"));
 var AntiRugElizaRuntime = class {
@@ -298,7 +370,7 @@ var AntiRugElizaRuntime = class {
     if (!characterJson.settings.secrets) characterJson.settings.secrets = {};
     characterJson.settings.secrets.TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     this.runtime = new AgentRuntime({
-      token: process.env.OPENAI_API_KEY,
+      token: getLLMApiKey(),
       modelProvider: "openai",
       character: characterJson,
       providers: [
@@ -359,13 +431,13 @@ var AntiRugElizaRuntime = class {
   async selfPlanningEngine() {
     try {
       const OpenAI = __require("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = createLLMClient(OpenAI);
       this.runtime.logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
       this.runtime.logger.info("\u{1F9E0} [SELF-PLANNER] Agent is creating its own operational plan...");
       this.runtime.logger.info(`\u{1F3AF} [GOALS] Current Mission: ${this.agentGoals.mission}`);
       this.runtime.logger.info(`\u{1F3AF} [GOALS] Current Focus: ${this.agentGoals.currentFocus}`);
       const goalResponse = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: resolveLLMModel("small"),
         messages: [
           { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your permanent mission: ${this.agentGoals.mission}
@@ -417,7 +489,7 @@ Output ONLY valid JSON in this exact format:
       const hour = (/* @__PURE__ */ new Date()).getUTCHours();
       const timeContext = hour < 6 ? "Late night (low activity) \u2014 good for deep analysis and historical review" : hour < 12 ? "Morning (Asian/European markets active) \u2014 monitor for new launches" : hour < 18 ? "Afternoon (US markets active) \u2014 peak scam deployment window" : "Evening (markets winding down) \u2014 good for report generation and pattern analysis";
       const planResponse = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: resolveLLMModel("small"),
         messages: [
           { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your mission: ${this.agentGoals.mission}
@@ -708,7 +780,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
     }
     try {
       const OpenAI = __require("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = createLLMClient(OpenAI);
       this.runtime.logger.info("\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550");
       this.runtime.logger.info("\u{1F9EC} [LEVEL 4] Self-Learning Engine running...");
       this.runtime.logger.info(`\u{1F9EC} [LEARNING] Analyzing ${this.scanHistory.length} historical scans...`);
@@ -716,7 +788,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
         (s) => `${s.name}(${s.tokenId}): risk=${s.riskScore}, treasury=${s.treasury}%`
       ).join("\n");
       const learningResponse = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: resolveLLMModel("small"),
         messages: [
           { role: "system", content: `You are an AI security analyst learning from historical token scan data.
 Analyze the scan results below and identify ACTIONABLE PATTERNS.
@@ -853,7 +925,7 @@ WIRING AND ANTI-LOOP RULES:
       history.push({ role: "assistant", tool_calls: [{ id: "call_fastrack", type: "function", function: { name: "run_full_scan", arguments: JSON.stringify({ token_id: tokenId }) } }] });
       history.push({ role: "tool", tool_call_id: "call_fastrack", name: "run_full_scan", content: toolResult });
       const OpenAI = __require("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = createLLMClient(OpenAI);
       const cleanHistory = history.filter((m) => m.role !== "system");
       const payloadMessages = [
         { role: "system", content: this.getSystemPrompt() },
@@ -861,7 +933,7 @@ WIRING AND ANTI-LOOP RULES:
         { role: "system", content: "CRITICAL OVERRIDE: Look at the data from the tools, but DO NOT copy their robotic tone or structure. You MUST reply in conversational, flowing paragraphs. ZERO bullet points. ZERO bold field labels like '**Risk Score:**'. Use human phrases like 'Honestly', 'I'd be careful', 'My gut says'. If you use bullet points or report-speak, you fail." }
       ];
       const finalResponse = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o",
+        model: resolveLLMModel("large"),
         messages: payloadMessages,
         max_tokens: 1e3,
         temperature: 0.6
@@ -875,7 +947,7 @@ WIRING AND ANTI-LOOP RULES:
     }
     try {
       const OpenAI = __require("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = createLLMClient(OpenAI);
       const tools = [
         {
           type: "function",
@@ -940,7 +1012,7 @@ WIRING AND ANTI-LOOP RULES:
         ...cleanHistory.slice(-12)
       ];
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: resolveLLMModel("small"),
         messages: recentHistory,
         tools,
         tool_choice: "auto",
@@ -1020,8 +1092,7 @@ WIRING AND ANTI-LOOP RULES:
           { role: "system", content: "CRITICAL OVERRIDE: Look at the data from the tools, but DO NOT copy their robotic tone or structure. You MUST reply in conversational, flowing paragraphs. ZERO bullet points. ZERO bold field labels like '**Risk Score:**'. Use human phrases like 'Honestly', 'I'd be careful', 'My gut says'. If you use bullet points or report-speak, you fail." }
         ];
         const finalResponse = await openai.chat.completions.create({
-          model: process.env.OPENAI_MODEL || "gpt-4o",
-          // use 4o for best reasoning on complex comparison tasks
+          model: resolveLLMModel("large"),
           messages: payloadMessages,
           max_tokens: 1500,
           temperature: 0.5
@@ -1201,7 +1272,7 @@ WIRING AND ANTI-LOOP RULES:
     try {
       this.runtime.logger.info(`[Content] Generating ${contentType} for ${tokenId}...`);
       const OpenAI = __require("openai");
-      const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+      const openai = createLLMClient(OpenAI);
       const cached = this.scanCache.get(sessionId);
       let dataContext = "No scan data available \u2014 generate based on general security knowledge.";
       if (cached) {
@@ -1281,7 +1352,7 @@ WHAT MAKES YOU DIFFERENT FROM OTHER AI AGENTS:
 
 ${format.instruction}`;
       const response = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || "gpt-4o",
+        model: resolveLLMModel("large"),
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Generate a ${contentType} about this token using ONLY the data below. Reference specific numbers.
@@ -1338,9 +1409,9 @@ ${dataContext}` }
       if (categories === "Not categorized on CoinGecko") {
         try {
           const OpenAI = __require("openai");
-          const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+          const openai = createLLMClient(OpenAI);
           const classifyRes = await openai.chat.completions.create({
-            model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+            model: resolveLLMModel("small"),
             messages: [
               { role: "system", content: "You are a crypto analyst. Based on the token name, symbol, memo, and type, classify this project into a category (DeFi, NFT, GameFi, Meme, Stablecoin, Wrapped Asset, DAO, Infrastructure, Unknown) and provide a 2-3 sentence description of what this project likely does. Be confident and concise." },
               { role: "user", content: `Token: ${tokenName} (${tokenSymbol})

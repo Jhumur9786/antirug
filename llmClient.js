@@ -1,24 +1,16 @@
 require("dotenv").config();
 const OpenAI = require("openai");
+const { createLLMClient, getLLMProviderLabel, resolveLLMModel } = require("./llmConfig");
 
 let openai = null;
 
 /**
- * Lazily initializes the OpenAI client.
- * This prevents a crash at require-time when OPENAI_API_KEY is not set.
+ * Lazily initializes the OpenAI-compatible LLM client.
+ * This prevents a crash at require-time when provider keys are not set.
  */
 function getClient() {
   if (!openai) {
-    const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
-    if (!apiKey) {
-      return null;
-    }
-    const baseURL = process.env.OPENAI_BASE_URL;
-    const config = { apiKey };
-    if (baseURL) {
-      config.baseURL = baseURL;
-    }
-    openai = new OpenAI(config);
+    openai = createLLMClient(OpenAI);
   }
   return openai;
 }
@@ -46,7 +38,7 @@ function withTimeout(promise, ms) {
 }
 
 /**
- * Send a prompt to an LLM. Defaults to gpt-4o-mini.
+ * Send a prompt to an LLM.
  *
  * @param {string} prompt - The analysis prompt
  * @param {Object} options - Custom generation parameters
@@ -56,12 +48,12 @@ async function askLLM(prompt, options = {}) {
   try {
     const client = getClient();
     if (!client) {
-      console.warn("[LLM WARNING] OPENAI_API_KEY not configured — skipping AI analysis");
+      console.warn("[LLM WARNING] No LLM API key configured — skipping AI analysis");
       return "AI sentiment analysis unavailable";
     }
 
     const payload = {
-        model: options.model || process.env.OPENAI_MODEL || "gpt-4o-mini",
+        model: options.model || resolveLLMModel("small"),
         messages: [
           {
             role: "system",
@@ -87,7 +79,7 @@ async function askLLM(prompt, options = {}) {
 
     return response.choices[0].message.content;
   } catch (error) {
-    console.warn(`[LLM WARNING] ${error.message}`);
+    console.warn(`[${getLLMProviderLabel()} WARNING] ${error.message}`);
     if (options.throwOnError) throw error; // Allow catching in multi-agent loops
     return "AI analysis unavailable";
   }

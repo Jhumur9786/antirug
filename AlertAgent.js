@@ -1,13 +1,11 @@
 const OpenAI = require("openai");
+const { createLLMClient, resolveLLMModel } = require("./llmConfig");
 
 // AlertAgent for AntiRug Multi-Agent Security Pipeline
 // converts AI risk predictions into security alerts and recommendations.
 class AlertAgent {
     constructor() {
-        const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
-        const config = apiKey ? { apiKey } : null;
-        if (config && process.env.OPENAI_BASE_URL) config.baseURL = process.env.OPENAI_BASE_URL;
-        this.openai = config ? new OpenAI(config) : null;
+        this.openai = createLLMClient(OpenAI);
     }
 
     /**
@@ -93,7 +91,7 @@ Do NOT hallucinate. Do not use markdown inside values. Return only the JSON obje
 
                     // typical model as per repo usage
                     const response = await this._withTimeout(this.openai.chat.completions.create({
-                        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                        model: resolveLLMModel("small"),
                         messages: [{ role: "user", content: prompt }],
                         temperature: 0.2,
                         max_tokens: 800,

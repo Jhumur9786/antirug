@@ -1,4 +1,5 @@
 const askLLM = require("./llmClient");
+const { resolveLLMModel } = require("./llmConfig");
 
 /**
  * ExpertConsensusAgent — TRUE MULTI-AGENT DEBATE MODE ⚔️ (OPTIMIZED)
@@ -45,7 +46,7 @@ INITIAL PIPELINE FINDINGS:
             const unwrap = (result, name) => result.status === 'fulfilled' ? result.value : `[${name} failed to respond due to network error]`;
             
             // Shared lightweight options for the arguing experts
-            const expertOpts = { model: process.env.OPENAI_MODEL || "gpt-4o-mini", max_tokens: 60, timeout: 8000, throwOnError: true };
+            const expertOpts = { model: resolveLLMModel("small"), max_tokens: 60, timeout: 8000, throwOnError: true };
 
             // ==========================================
             // ROUND 1: INDEPENDENT ANALYSIS (Parallel, Fault Tolerant)
@@ -118,9 +119,9 @@ RETURN JSON OBJECT WITH EXACT EXACTLY THESE KEYS:
 "confidence_rating": number (0 to 100)
 `;
 
-            // Use gpt-4o for complex JSON validation and synthesis, slightly longer timeout
+            // Use the configured large model for complex JSON validation and synthesis.
             const responseText = await askLLM(moderatorPrompt, { 
-                model: "gpt-4o", 
+                model: resolveLLMModel("large"),
                 max_tokens: 350, 
                 timeout: 20000,
                 response_format: { type: "json_object" } 

@@ -1,0 +1,6 @@
+# Unused vendored Eliza workspaces. These contain broken symlinks that break
+# Railway's upload indexer, while the app only depends on eliza/packages/core
+# and its local package dependencies.
+eliza/packages/benchmarks/
+eliza/packages/feed/
+eliza/packages/os/

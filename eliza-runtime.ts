@@ -16,6 +16,12 @@ import { scanTokenAction } from "./ElizaActions/ScanAction";
 import { sentimentAction } from "./ElizaActions/SentimentAction";
 import { predictRugPullAction } from "./ElizaActions/PredictAction";
 
+const {
+    createLLMClient,
+    getLLMApiKey,
+    resolveLLMModel,
+} = require("./llmConfig");
+
 
 // Load character file
 const characterPath = path.resolve(process.cwd(), "antirug.character.json");
@@ -75,7 +81,7 @@ export class AntiRugElizaRuntime {
         characterJson.settings.secrets.TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
         this.runtime = new AgentRuntime({
-            token: process.env.OPENAI_API_KEY as string,
+            token: getLLMApiKey() as string,
             modelProvider: "openai" as any,
             character: characterJson,
             providers: [
@@ -155,7 +161,7 @@ export class AntiRugElizaRuntime {
     private async selfPlanningEngine() {
         try {
             const OpenAI = require("openai");
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = createLLMClient(OpenAI);
 
             this.runtime.logger.info("═══════════════════════════════════════════════════");
             this.runtime.logger.info("🧠 [SELF-PLANNER] Agent is creating its own operational plan...");
@@ -164,7 +170,7 @@ export class AntiRugElizaRuntime {
 
             // STEP 1: Self-Goal Setting — AI updates its own goals based on market conditions
             const goalResponse = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                model: resolveLLMModel("small"),
                 messages: [
                     { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your permanent mission: ${this.agentGoals.mission}
@@ -229,7 +235,7 @@ Output ONLY valid JSON in this exact format:
                 : "Evening (markets winding down) — good for report generation and pattern analysis";
 
             const planResponse = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                model: resolveLLMModel("small"),
                 messages: [
                     { role: "system", content: `You are AntiRug, an autonomous AI security agent on the Solana network.
 Your mission: ${this.agentGoals.mission}
@@ -578,7 +584,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
 
         try {
             const OpenAI = require("openai");
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = createLLMClient(OpenAI);
 
             this.runtime.logger.info("═══════════════════════════════════════════════════");
             this.runtime.logger.info("🧬 [LEVEL 4] Self-Learning Engine running...");
@@ -590,7 +596,7 @@ Be bold, creative, and different each time. Surprise yourself.` },
             ).join("\n");
 
             const learningResponse = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                model: resolveLLMModel("small"),
                 messages: [
                     { role: "system", content: `You are an AI security analyst learning from historical token scan data.
 Analyze the scan results below and identify ACTIONABLE PATTERNS.
@@ -748,7 +754,7 @@ WIRING AND ANTI-LOOP RULES:
             history.push({ role: "tool", tool_call_id: "call_fastrack", name: "run_full_scan", content: toolResult } as any);
             
             const OpenAI = require("openai");
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = createLLMClient(OpenAI);
             
             const cleanHistory = history.filter(m => m.role !== "system");
             const payloadMessages = [
@@ -758,7 +764,7 @@ WIRING AND ANTI-LOOP RULES:
             ];
 
             const finalResponse = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o",
+                model: resolveLLMModel("large"),
                 messages: payloadMessages as any,
                 max_tokens: 1000,
                 temperature: 0.6
@@ -778,7 +784,7 @@ WIRING AND ANTI-LOOP RULES:
         // 2. Intent Detection — Use OpenAI to figure out what the user wants
         try {
             const OpenAI = require("openai");
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = createLLMClient(OpenAI);
 
             const tools = [
                 {
@@ -847,7 +853,7 @@ WIRING AND ANTI-LOOP RULES:
             ];
             
             const response = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                model: resolveLLMModel("small"),
                 messages: recentHistory as any,
                 tools: tools,
                 tool_choice: "auto",
@@ -942,7 +948,7 @@ WIRING AND ANTI-LOOP RULES:
                 ];
 
                 const finalResponse = await openai.chat.completions.create({
-                    model: process.env.OPENAI_MODEL || "gpt-4o", // use 4o for best reasoning on complex comparison tasks
+                    model: resolveLLMModel("large"),
                     messages: payloadMessages as any,
                     max_tokens: 1500,
                     temperature: 0.5
@@ -1155,7 +1161,7 @@ WIRING AND ANTI-LOOP RULES:
         try {
             this.runtime.logger.info(`[Content] Generating ${contentType} for ${tokenId}...`);
             const OpenAI = require("openai");
-            const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+            const openai = createLLMClient(OpenAI);
 
             const cached = this.scanCache.get(sessionId);
             
@@ -1244,7 +1250,7 @@ WHAT MAKES YOU DIFFERENT FROM OTHER AI AGENTS:
 ${format.instruction}`;
 
             const response = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || "gpt-4o",
+                model: resolveLLMModel("large"),
                 messages: [
                     { role: "system", content: systemPrompt },
                     { role: "user", content: `Generate a ${contentType} about this token using ONLY the data below. Reference specific numbers.\n\n${dataContext}` }
@@ -1309,9 +1315,9 @@ ${format.instruction}`;
             if (categories === "Not categorized on CoinGecko") {
                 try {
                     const OpenAI = require("openai");
-                    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+                    const openai = createLLMClient(OpenAI);
                     const classifyRes = await openai.chat.completions.create({
-                        model: process.env.OPENAI_MODEL || "gpt-4o-mini",
+                        model: resolveLLMModel("small"),
                         messages: [
                             { role: "system", content: "You are a crypto analyst. Based on the token name, symbol, memo, and type, classify this project into a category (DeFi, NFT, GameFi, Meme, Stablecoin, Wrapped Asset, DAO, Infrastructure, Unknown) and provide a 2-3 sentence description of what this project likely does. Be confident and concise." },
                             { role: "user", content: `Token: ${tokenName} (${tokenSymbol})\nMemo: ${tokenMemo}\nType: ${tokenType}\nTotal Supply: ${totalSupply}\nDecimals: ${decimals}` }
