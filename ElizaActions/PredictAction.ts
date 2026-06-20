@@ -3,7 +3,7 @@ import path from "path";
 const RiskScoringAgent = require(path.resolve(process.cwd(), "RiskScoringAgent"));
 const RugPredictorAgent = require(path.resolve(process.cwd(), "RugPredictorAgent"));
 const AlertAgent = require(path.resolve(process.cwd(), "AlertAgent"));
-import { OpenConvAIClient } from "../openconvai-client";
+
 import { ToolDataCache } from "./SharedCache";
 
 export const predictRugPullAction: Action = {
@@ -52,9 +52,7 @@ export const predictRugPullAction: Action = {
 
             if (prediction.rug_probability > 75) {
                 const criticalIssue = cached.blockchain.mint_risk_level === "CRITICAL" ? "Centralized Minting Authority Detected" : alert.security_posture;
-                if (OpenConvAIClient.instance) {
-                    await OpenConvAIClient.instance.broadcastGlobalAlert(tokenId, prediction.rug_probability, criticalIssue);
-                }
+                // Broadcast removed
             }
 
             const response = `🚨 FINAL SECURITY POSTURE: ${cached.scanner.name} 🚨

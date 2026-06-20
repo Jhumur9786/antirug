@@ -23,7 +23,7 @@ const characterJson = JSON.parse(fs.readFileSync(characterPath, "utf-8"));
 
 export class AntiRugElizaRuntime {
     private runtime!: AgentRuntime;
-    private openConvAI!: OpenConvAIClient;
+    // OpenConvAI removed
     // Ultra-lightweight conversational memory map: chatId -> previous messages
     private chatMemory = new Map<string, Array<{role: string, content: string}>>();
     // Persistent memory file path
@@ -998,8 +998,8 @@ WIRING AND ANTI-LOOP RULES:
             // Cache for follow-up queries
             this.scanCache.set(sessionId, { tokenId, scannerData, sentimentData, bcRisk, riskScore, prediction, alert });
 
-            if (prediction.rug_probability > 75 && OpenConvAIClient.instance) {
-                await OpenConvAIClient.instance.broadcastGlobalAlert(tokenId, prediction.rug_probability, alert.security_posture);
+            if (prediction.rug_probability > 75) {
+                // Broadcast removed
             }
 
             const report = JSON.stringify({

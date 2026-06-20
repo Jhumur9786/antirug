@@ -72,9 +72,7 @@ export const analyzeTokenAction: Action = {
             // 6. 🚨 OPENCONVAI HCS-10 DECENTRALIZED SIREN BROADCAST
             if (prediction.rug_probability > 75) {
                 const criticalIssue = bcRisk.mint_risk_level === "CRITICAL" ? "Centralized Minting Authority Detected" : alert.security_posture;
-                if (OpenConvAIClient.instance) {
-                    await OpenConvAIClient.instance.broadcastGlobalAlert(tokenId, prediction.rug_probability, criticalIssue);
-                }
+                // Broadcast removed
             }
 
             // Construct the final conversational payload Eliza will output
