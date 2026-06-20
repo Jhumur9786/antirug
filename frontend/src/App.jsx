@@ -6,7 +6,7 @@ import HeroInput from './components/HeroInput'
 import ResultsDashboard from './components/ResultsDashboard'
 import ScanningAnimation from './components/ScanningAnimation'
 
-const API_BASE = import.meta.env.DEV ? '' : (import.meta.env.VITE_API_BASE || 'https://antirug-production-e5cd.up.railway.app')
+const API_BASE = "";
 
 function App() {
   const [messages, setMessages] = useState(() => {
