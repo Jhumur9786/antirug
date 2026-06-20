@@ -56,9 +56,10 @@ Current date: ${new Date().toISOString().split('T')[0]}
 
 class ConversationalAgent {
     constructor() {
-        this.openai = process.env.OPENAI_API_KEY
-            ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-            : null;
+        const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
+        const config = apiKey ? { apiKey } : null;
+        if (config && process.env.OPENAI_BASE_URL) config.baseURL = process.env.OPENAI_BASE_URL;
+        this.openai = config ? new OpenAI(config) : null;
     }
 
     // ── Token Address Extraction ──────────────────────────────────

@@ -4,7 +4,10 @@ const OpenAI = require("openai");
 // converts AI risk predictions into security alerts and recommendations.
 class AlertAgent {
     constructor() {
-        this.openai = process.env.OPENAI_API_KEY ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY }) : null;
+        const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
+        const config = apiKey ? { apiKey } : null;
+        if (config && process.env.OPENAI_BASE_URL) config.baseURL = process.env.OPENAI_BASE_URL;
+        this.openai = config ? new OpenAI(config) : null;
     }
 
     /**
