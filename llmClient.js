@@ -9,7 +9,7 @@ let openai = null;
  */
 function getClient() {
   if (!openai) {
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.GROQ_API_KEY || process.env.OPENAI_API_KEY;
     if (!apiKey) {
       return null;
     }
