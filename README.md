@@ -1,6 +1,6 @@
-# 🛡️ AntiRug v3 — Solana Threat Intelligence Platform
+# 🛡️ AntiRug v3 — Autonomous Solana Threat Intelligence Agent
 
-> **Multi-agent AI pipeline that detects Solana rug pulls by analyzing people, wallets, and behavioral networks — not just tokens. Powered by 11 intelligence layers, entity tracking, and wallet graph analysis.**
+> **A dedicated autonomous security agent for Solana. AntiRug continuously investigates tokens, wallets, deployers, funding trails, and behavioral networks through an 11-layer risk pipeline — then learns, alerts, and explains what it finds.**
 
 [![Solana](https://img.shields.io/badge/Solana-Mainnet-9945FF?logo=solana)](https://solana.com)
 [![React](https://img.shields.io/badge/Frontend-React_+_Vite-61DAFB?logo=react)](https://react.dev)
@@ -12,19 +12,32 @@
 
 ## 📌 Overview
 
-AntiRug is a **production-grade Solana threat intelligence platform** that goes far beyond basic token scanning. It runs an **11-layer analysis pipeline** with 15+ specialized modules that evaluate on-chain risk, build wallet relationship graphs, detect bundled launches, track deployer history across multiple tokens, trace funding sources, simulate sells for honeypot detection, and produce actionable threat reports — all deterministically scored with AI-assisted reasoning.
+AntiRug is a **production-grade autonomous Solana threat intelligence agent**. The core idea is not "a scanner with an AI chat box"; it is a dedicated security agent whose job is to watch Solana, decide what needs investigation, run a full forensic pipeline, remember what it learns, and surface threats before users become exit liquidity.
+
+The agent is powered by an **11-layer risk pipeline** with 15+ specialized modules. Those layers evaluate token security, liquidity, holder distribution, wallet clusters, bundled launches, deployer history, SOL funding origin, entity behavior, market manipulation, social verification, and historical rug similarity. The pipeline gives AntiRug its evidence; the autonomous agent turns that evidence into continuous monitoring, natural-language explanations, alerts, and self-improving threat intelligence.
+
+### Product Vision
+
+AntiRug is designed to become a **24/7 Solana security analyst**:
+
+1. **Observe** new tokens, active sessions, risk trends, and suspicious network behavior.
+2. **Investigate** with the 11-layer deterministic risk pipeline.
+3. **Connect** wallets, deployers, funding sources, and prior rugs into actor-level intelligence.
+4. **Decide** whether a token, deployer, or entity crosses hard risk thresholds.
+5. **Explain** the threat in plain language through chat, reports, and alerts.
+6. **Learn** from every scan so the deployer/entity/rug datasets compound over time.
 
 ### Core Philosophy
 
 > Most scanners ask *"Is the token dangerous?"*
 >
-> AntiRug asks *"Who created it? Who owns it? Who controls liquidity? Who is secretly connected? Who is selling? Who funded them? Does it behave like previous rugs?"*
+> AntiRug asks *"Who created it? Who owns it? Who controls liquidity? Who is secretly connected? Who is selling? Who funded them? Does this actor behave like previous rugs — and what should I investigate next?"*
 >
 > **The token itself is rarely the scam. The people behind it are.**
 
 ### What Makes AntiRug Different
 
-| Layer | What We Check | Why It Matters |
+| Capability | What We Check | Why It Matters |
 |-------|--------------|----------------|
 | 🔐 **Token Security** | Mint/Freeze/Update/Metadata authority, Token2022 extensions | Basic hygiene — necessary but not sufficient |
 | 💧 **Liquidity Intelligence** | LP lock/burn, exit slippage simulation, dry-run sell (honeypot detection) | Detects LP pulls and hidden sell taxes |
@@ -43,7 +56,9 @@ AntiRug is a **production-grade Solana threat intelligence platform** that goes 
 
 ## 🏗️ Architecture
 
-AntiRug uses a **parallel multi-agent pipeline** where 11 specialized layers run concurrently after the initial token scan, followed by a Critical Override Engine, Risk Trend Engine, and Rug Network Explorer:
+AntiRug is built as an **agent-orchestrated intelligence system**. The autonomous agent is the operator: it receives user questions or background-monitoring goals, chooses the right investigation path, runs the 11-layer pipeline, stores what it learns, and returns a threat assessment. The pipeline is the agent's forensic engine.
+
+After the initial token scan, 11 specialized layers run concurrently, followed by a Critical Override Engine, Risk Trend Engine, and Rug Network Explorer:
 
 ```
                               ┌─────────────────────┐
@@ -282,12 +297,16 @@ Network Risk: 92/100
 
 ## 🤖 Autonomous AI Agent Core (Powered by ElizaOS)
 
-AntiRug features a fully autonomous AI agent runtime built on the **ElizaOS** framework (`eliza-runtime.ts`), which sits on top of our 11-layer threat detection engine. It operates as a self-directed security sentinel:
+AntiRug's main product experience is the **autonomous agent**. The 11-layer risk system is not a separate backend utility; it is the agent's investigation toolkit. The agent can chat, trigger scans, synthesize results, remember prior findings, and run background security work without waiting for a user to manually click every step.
+
+The runtime is built on **ElizaOS** (`eliza-runtime.ts`) and operates as a self-directed security sentinel:
 
 *   **Self-Planning Engine:** Every hour, the agent analyzes active market conditions (Fear & Greed Index), open sessions, and daily objectives to generate its own operational plan. It executes scheduled tasks (such as token scans and report generation) entirely without human intervention.
 *   **Self-Learning Loop:** Every 6 hours, the agent executes a background learning cycle that parses historical scan results and newly recorded rugs, extracting behavioral safety patterns and updating its internal heuristic rules dynamically.
 *   **Conversational Interface:** The agent connects directly to messaging channels (like Telegram) via its character configuration (`antirug.character.json`). It handles natural language inquiries, triggers on-demand scans, and posts real-time security alerts.
 *   **Dynamic Adaptation:** The agent adjusts its operational focus, scanning aggressiveness, and user interaction styles depending on real-time market volatility and sentiment.
+*   **Pipeline Orchestration:** The agent combines token, liquidity, wallet, deployer, funding, entity, market, social, and historical-similarity evidence into one coherent threat narrative.
+*   **Memory-Driven Intelligence:** Every scan can strengthen deployer reputation, entity clustering, rug similarity, and future risk decisions.
 
 ---
 
@@ -297,12 +316,12 @@ AntiRug features a fully autonomous AI agent runtime built on the **ElizaOS** fr
 
 - **Node.js** ≥ 18.0.0
 - **Python** ≥ 3.8 (for the token scanner)
-- **OpenAI API Key** (for AI risk analysis)
+- **Groq API Key** or another OpenAI-compatible LLM provider key (for agent reasoning and AI-assisted explanations)
 
 ### Installation
 
 ```bash
-git clone https://github.com/AounJafri/antirug.git
+git clone https://github.com/Jhumur9786/antirug.git
 cd antirug
 npm install
 ```
@@ -312,8 +331,13 @@ npm install
 Create a `.env` file in the project root:
 
 ```env
-# Required
-OPENAI_API_KEY=sk-your-openai-key
+# Required for the autonomous agent reasoning layer
+GROQ_API_KEY=gsk-your-groq-key
+OPENAI_BASE_URL=https://api.groq.com/openai/v1
+OPENAI_MODEL=llama-3.3-70b-versatile
+
+# Optional fallback if using OpenAI directly instead of Groq
+# OPENAI_API_KEY=sk-your-openai-key
 
 # Optional — defaults to public endpoint (rate limited)
 SOLANA_RPC_URL=https://api.mainnet-beta.solana.com
@@ -426,7 +450,8 @@ antirug/
 ├── ExpertConsensusAgent.js          # Multi-expert deep analysis
 ├── ConversationalAgent.js           # Natural language chat interface
 ├── ConversationManager.js           # Session memory management
-├── llmClient.js                     # Shared OpenAI GPT wrapper
+├── llmClient.js                     # Shared OpenAI-compatible LLM wrapper
+├── llmConfig.js                     # Groq/OpenAI-compatible provider configuration
 │
 ├── ── Data ──
 ├── db.sqlite                        # Deployer reputation + entity database
@@ -465,7 +490,7 @@ antirug/
 | Layer | Technology |
 |-------|-----------|
 | **Runtime** | Node.js ≥ 18 + Python ≥ 3.8 |
-| **AI / LLM** | OpenAI API (supplementary reasoning only) |
+| **AI / LLM** | Groq or OpenAI-compatible chat completions (agent reasoning + supplementary explanations) |
 | **Blockchain** | Solana (SPL Tokens, Token-2022, Metaplex, Raydium) |
 | **Database** | SQLite (deployer reputation, entity DB, risk history) |
 | **Data Sources** | Solana RPC, GeckoTerminal, DexScreener |
